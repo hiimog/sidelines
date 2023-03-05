@@ -1,0 +1,10 @@
+{
+  "name" : "sidelines",
+  "version-string" : "1.0.0",
+  "builtin-baseline" : "8daf70c56ba9581f5251a5d4675eb771b6b34957",
+  "dependencies" : [ {
+    "name" : "sqlitecpp",
+    "version>=" : "3.2.0#1",
+    "$comment" : "    # this is heuristically generated, and may not be correct\n\n    find_package(SQLiteCpp CONFIG REQUIRED)\n\n    target_link_libraries(main PRIVATE SQLiteCpp)\n"
+  } ]
+}
