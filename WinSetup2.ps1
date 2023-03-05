@@ -1,4 +1,5 @@
 $ErrorActionPreference = "Stop"
+# does not need admin
 $ghtoken = read-host "Enter github token: "
 $ghtoken > ~/.github
 	
