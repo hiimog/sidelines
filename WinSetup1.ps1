@@ -7,8 +7,10 @@ Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManage
 choco feature enable -n allowGlobalConfirmation
 choco install `
 	7zip `
+	bat `
 	cmake `
 	curl `
+	delta `
 	git `
 	gnuwin32-coreutils.install `
 	googlechrome `
