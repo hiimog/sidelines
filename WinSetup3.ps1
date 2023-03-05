@@ -3,7 +3,8 @@ $ErrorActionPreference = "Stop"
 pip install `
     click `
     chess `
-    mako # had an install error with renderer
+    mako ` # had an install error with renderer
+    seqlog
 
 #needs admin
 pip install --editable C:\src\sidelines\util
