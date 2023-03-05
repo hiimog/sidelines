@@ -24,3 +24,7 @@ function mkcd {
     }
     set-location $Dir
 }
+
+function copyguid {
+    Set-Clipboard -Value ([guid]::NewGuid().ToString())
+}

@@ -1,14 +1,7 @@
-import sys
 import click as c
-import logging as l
-import seqlog
-import orjson
+import log as l
 
-seqlog.log_to_seq(server_url="http://127.0.0.1:5341",
-                  level=l.DEBUG,
-                  batch_size=1,
-                  override_root_logger=True)
-logger = l.getLogger()
+log = l.Log("main")
 
 
 @c.group()
@@ -22,4 +15,5 @@ def info():
 
 
 if __name__ == "__main__":
+    log.debug("f4dd0d93-33a0-4928-8637-58be4bd2e452", "Util starting")
     util()

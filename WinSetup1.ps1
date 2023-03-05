@@ -15,6 +15,7 @@ choco install `
 	gnuwin32-coreutils.install `
 	googlechrome `
 	jetbrainstoolbox `
+	linqpad7.install `
 	microsoft-windows-terminal --pre `
 	mingw `
 	nodejs `
