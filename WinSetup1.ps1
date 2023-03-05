@@ -18,6 +18,7 @@ choco install `
 	nodejs `
 	python3 `
 	rustup.install `
+	seq `
 	vscode 
 
 npm i -g http-server prettier yarn
