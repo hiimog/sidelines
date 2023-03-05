@@ -5,3 +5,5 @@ pip install `
     chess `
     mako # had an install error with renderer
 
+#needs admin
+pip install --editable C:\src\sidelines\util
