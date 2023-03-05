@@ -21,3 +21,5 @@ choco install `
 	vscode 
 
 npm i -g http-server prettier yarn
+
+cargo install tauri-cli
