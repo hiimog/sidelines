@@ -110,3 +110,5 @@ class SquareSet:
 
 
 squares = [Square(i) for i in range(64)]
+squareLookup = {s.name: s for s in squares}
+
