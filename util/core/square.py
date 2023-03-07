@@ -1,14 +1,40 @@
+import re
 from typing import *
 from dataclasses import dataclass
 
 SideNames = Union["white", "black", "both"]
 
+algebraic_regex = re.compile("^[a-h][1-8]$", re.I)
+
 
 class Square:
-    def __init__(self, idx: int):
-        if idx < 0 or idx > 63:
-            raise ValueError("Square index can only be in the range [0,64)")
-        self._idx = idx
+    def __init__(self, which: any = None):
+        if which is None:
+            self._idx = 0
+        tipe = type(which)
+        if tipe == int:
+            self._idx = which
+            if not self._is_valid():
+                raise ValueError("int must be 0<=X<=63")
+        elif tipe == Tuple[int, int]:
+            row, col = which
+            self._idx = row * 8 + col
+            if not self._is_valid():
+                raise ValueError("2-tuple must have values 0<=X<=63")
+        elif tipe == str:
+            which = which.lower()
+            if not algebraic_regex.search(which):
+                raise ValueError("algebraic form only")
+            row = int(which[1]) - 1
+            col = "abcdefgh".index(which[0])
+            self._idx = row * 8 + col
+        elif tipe == Square:
+            self._idx = which.index
+        else:
+            raise ValueError("Unsupported constructor value")
+
+    def _is_valid(self):
+        return 0 <= self._idx <= 63
 
     @property
     def index(self):
@@ -78,17 +104,23 @@ class Square:
 
 
 class SquareSet:
-    def __init__(self, initial: any):
-        self.value = 0
+    def __init__(self, initial: any = None):
+        self._value = 0
+        if initial is None:
+            return
         tipe = type(initial)
         if tipe == SquareSet:
-            self.value = initial.value
+            self._value = initial.value
         elif tipe == list:
             self._init_from_list(initial)
         elif tipe == Square:
-            self.value = initial.mask
+            self._value = initial.mask
         elif tipe == int:
-            self.value = initial
+            self._value = initial
+
+    @property
+    def value(self):
+        return self._value
 
     def _init_from_list(self, initial: list) -> None:
         acc = 0
@@ -100,15 +132,21 @@ class SquareSet:
                 acc |= item.mask
             elif tipe == int:
                 acc |= item
-        self.value = acc
+        self._value = acc
 
     def squares(self) -> List[Square]:
         for i in range(64):
             mask = 1 << i
-            if self.value & mask:
+            if self._value & mask:
                 yield Square(i)
+
+    def __contains__(self, item):
+        if item is None:
+            return True
+        tipe = type(item)
+        if tipe == SquareSet:
+            return self.value & item.value == self.value
 
 
 squares = [Square(i) for i in range(64)]
 squareLookup = {s.name: s for s in squares}
-

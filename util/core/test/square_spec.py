@@ -1,9 +1,28 @@
+import dataclasses
 import dataclasses as dc
 from core.square import *
-from grappa import should
+import pytest
 
+class TestSquare():
+    def should_be_constructable_from(self):
+        @dc.dataclass
+        class Case:
+            name: str
+            value: any
+            want: int
+        dummy = Square(0)
+        dummy._idx = 8
+        test_data = [
+            Case("None", None, 0),
+            Case("a1", "a1", 0),
+            Case("63", 63, 63),
+            Case("Square", dummy, 8)
+        ]
+        for t in test_data:
 
-class TestSquare:
+            s = Square(t.value)
+            should(s.index).to.be(t.want, msg=t.name)
+
     def should_get_correct_square_color(self):
         @dc.dataclass
         class Case:
@@ -52,3 +71,28 @@ class TestSquare:
         ]
         for i, t in enumerate(test_data):
             should(t.square.name).be.equal.to(t.want, msg=t.name)
+
+class TestSquareSet:
+    def should_be_creatable_from(self):
+        @dataclasses.dataclass
+        class Case:
+            name: str
+            values: any
+            want: int
+
+        dummy_square_set = SquareSet()
+        dummy_square_set._value = 42
+
+        test_data = [
+            Case("No parameters", None, 0),
+            Case("Single square", squares[0], 0b1),
+            Case("List of squares", squares[0:3], 0b111),
+            Case("SquareSet", dummy_square_set, 42),
+            Case("int", 42, 42),
+            Case("Mix of types", [squareLookup["a1"], 2], 0b11)
+        ]
+
+        for t in test_data:
+            _ = (lambda _: SquareSet(t.values) | should.does_not.raises(msg=t.name))
+            sut = SquareSet(t.values)
+            should(sut.value).be.equal.to(t.want, msg=t.name)
