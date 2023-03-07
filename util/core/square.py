@@ -2,9 +2,12 @@ import re
 from typing import *
 from dataclasses import dataclass
 
-SideNames = Union["white", "black", "both"]
 
-algebraic_regex = re.compile("^[a-h][1-8]$", re.I)
+ALGEBRAIC_REGEX = re.compile("^[a-h][1-8]$", re.I)
+WHITE = "white"
+BLACK = "black"
+EITHER = "either"
+SideNames = Literal["white", "black", "either"]
 
 
 class Square:
@@ -26,7 +29,7 @@ class Square:
                 raise ValueError("2-tuple must each have values 0<=X<=7")
         elif tipe == str:
             which = which.lower()
-            if not algebraic_regex.search(which):
+            if not ALGEBRAIC_REGEX.search(which):
                 raise ValueError("algebraic form only")
             row = int(which[1]) - 1
             col = "abcdefgh".index(which[0])
@@ -52,12 +55,24 @@ class Square:
         return self._idx % 8
 
     @property
+    def row_col(self):
+        return self.row, self.col
+
+    @property
     def rank(self):
         return self.row + 1
 
     @property
     def file(self):
         return "abcdefgh"[self.col]
+
+    @property
+    def rank_file(self):
+        return self.rank, self.file
+
+    @property
+    def row_col_rank_file(self):
+        return self.row, self.col, self.rank, self.file
 
     @property
     def name(self):
@@ -79,14 +94,14 @@ class Square:
     def smask(self):
         return f"{self.mask:063b}"
 
-    def is_promotion(self, sides: SideNames = "both"):
-        if sides == "white":
+    def is_promotion(self, side: SideNames = EITHER):
+        if side == WHITE:
             return self.row == 7
-        if sides == "black":
+        if side == BLACK:
             return self.row == 0
-        if sides == "both":
+        if side == EITHER:
             return self.row == 0 or self.row == 7
-        raise ValueError("sides must be white, black, or both")
+        raise ValueError("sides must be white, black, or either")
 
     def __str__(self):
         return self.name
@@ -107,7 +122,7 @@ class Square:
             return self._idx == other.index
         if tipe == str:
             return self.name == other.lower()
-
+        return False
 
 class SquareSet:
     def __init__(self, initial: any = None):
