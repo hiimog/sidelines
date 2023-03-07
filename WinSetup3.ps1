@@ -5,6 +5,7 @@ pip install `
     chess `
     mako ` # had an install error with renderer
     orjson `
+    pytest `
     seqlog
 
 #needs admin

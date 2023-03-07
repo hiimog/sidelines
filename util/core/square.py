@@ -11,16 +11,19 @@ class Square:
     def __init__(self, which: any = None):
         if which is None:
             self._idx = 0
+            return
         tipe = type(which)
         if tipe == int:
             self._idx = which
             if not self._is_valid():
                 raise ValueError("int must be 0<=X<=63")
-        elif tipe == Tuple[int, int]:
+        elif tipe == tuple and len(which) == 2:
             row, col = which
+            if type(row) != int or type(col) != int:
+                raise ValueError("2-tuple can only be for ints")
             self._idx = row * 8 + col
             if not self._is_valid():
-                raise ValueError("2-tuple must have values 0<=X<=63")
+                raise ValueError("2-tuple must each have values 0<=X<=7")
         elif tipe == str:
             which = which.lower()
             if not algebraic_regex.search(which):
@@ -87,6 +90,9 @@ class Square:
 
     def __str__(self):
         return self.name
+
+    def __repr__(self):
+        return f"Square({self._idx})"
 
     def __int__(self):
         return self._idx
