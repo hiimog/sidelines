@@ -170,6 +170,7 @@ def squareset_should_be_constructible():
         Case("zero case", 0, 0),
         Case("a1", "a1", 0x1),
         Case("e4 e5", ["e4", "d5"], (c.BB_E4 | c.BB_D5)),
+        Case("Comma separated list", "a1,e4", (c.BB_A1 | c.BB_E4)),
         Case("mixed list a1 e4 g7", [squares[0], "e4", c.BB_G7], (c.BB_A1 | c.BB_E4 | c.BB_G7)),
     ]
 
@@ -179,3 +180,23 @@ def squareset_should_be_constructible():
         except:
             pytest.fail(f"SquareSet construction failed for case \"{name}\"")
         assert ss.value == want, name
+
+def squareset_should_enumerate_squares():
+    @dc.dataclass
+    class Case:
+        name: str
+        squareset: SquareSet
+        want: Set[Square]
+
+        def __iter__(self):
+            return iter([self.name, self.squareset, self.want])
+
+    cases = [
+        Case("Empty squareset", SquareSet(0), set([])),
+        Case("Single square", SquareSet("a1"), {Square("a1")}),
+        Case("Several squares", SquareSet("a1,a2,a3,a4"), set( [squares[i] for i in range(4)])),
+        Case("All squares", SquareSet(c.BB_ALL), set(squares)),
+    ]
+
+    for name, squareset, want in cases:
+        pass
