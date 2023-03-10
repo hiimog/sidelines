@@ -11,6 +11,9 @@ def square_should_be_constructible():
         value: any
         want: int
 
+        def __iter__(self):
+            return iter([self.name, self.value, self.want])
+
     dummy = Square()
     dummy._idx = 42
     cases = [
@@ -21,12 +24,12 @@ def square_should_be_constructible():
         Case("row and col", (1, 2), c.parse_square("c2")),
         Case("another square", dummy, 42),
     ]
-    for case in cases:
+    for name, value, want in cases:
         try:
-            sq = Square(case.value)
+            sq = Square(value)
         except:
-            pytest.fail(f"'{case.name}' raised unexpectedly", True)
-        assert sq.index == case.want, f"'{case.name}' can be used to construct a Square"
+            pytest.fail(f"Square construction failed for case \"{name}\"")
+        assert sq.index == want, name
 
 
 def square_should_validate_parameters_to_constructor():
@@ -150,3 +153,29 @@ def square_should_have_equality_with_several_types():
     for name, square, other, want in cases:
         got = square == other
         assert got == want, name
+
+
+def squareset_should_be_constructible():
+    @dc.dataclass
+    class Case:
+        name: str
+        value: any
+        want: int
+
+        def __iter__(self):
+            return iter([self.name, self.value, self.want])
+
+    cases = [
+        Case("int", 42, 42),
+        Case("zero case", 0, 0),
+        Case("a1", "a1", 0x1),
+        Case("e4 e5", ["e4", "d5"], (c.BB_E4 | c.BB_D5)),
+        Case("mixed list a1 e4 g7", [squares[0], "e4", c.BB_G7], (c.BB_A1 | c.BB_E4 | c.BB_G7)),
+    ]
+
+    for name, value, want in cases:
+        try:
+            ss = SquareSet(value)
+        except:
+            pytest.fail(f"SquareSet construction failed for case \"{name}\"")
+        assert ss.value == want, name

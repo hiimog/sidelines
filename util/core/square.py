@@ -1,6 +1,5 @@
 import re
 from typing import *
-from dataclasses import dataclass
 
 
 ALGEBRAIC_REGEX = re.compile("^[a-h][1-8]$", re.I)
@@ -124,6 +123,7 @@ class Square:
             return self.name == other.lower()
         return False
 
+
 class SquareSet:
     def __init__(self, initial: any = None):
         self._value = 0
@@ -132,12 +132,17 @@ class SquareSet:
         tipe = type(initial)
         if tipe == SquareSet:
             self._value = initial.value
+        elif tipe == int:
+            self._value = initial
         elif tipe == list:
             self._init_from_list(initial)
         elif tipe == Square:
             self._value = initial.mask
-        elif tipe == int:
-            self._value = initial
+        else:
+            try:
+                self._value = Square(initial).mask
+            except:
+                raise ValueError("Unsupported constructor value")
 
     @property
     def value(self):
@@ -145,7 +150,7 @@ class SquareSet:
 
     def _init_from_list(self, initial: list) -> None:
         acc = 0
-        for item in initial:
+        for i, item in enumerate(initial):
             tipe = type(item)
             if tipe == SquareSet:
                 acc |= item.value
@@ -153,13 +158,20 @@ class SquareSet:
                 acc |= item.mask
             elif tipe == int:
                 acc |= item
+            else:
+                try:
+                    acc |= Square(item).mask
+                except:
+                    raise ValueError(f"item {i}: \"{item}\" can not be part of a SquareSet")
         self._value = acc
 
     def squares(self) -> List[Square]:
+        res = []
         for i in range(64):
             mask = 1 << i
             if self._value & mask:
-                yield Square(i)
+                res.append(Square(i))
+        return res
 
     def __contains__(self, item):
         if item is None:
