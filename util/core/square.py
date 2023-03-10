@@ -1,5 +1,6 @@
 import re
 from typing import *
+from addict import Dict
 
 ALGEBRAIC_REGEX = re.compile("^[a-h][1-8]$", re.I)
 WHITE = "white"
@@ -145,6 +146,82 @@ class SquareSet:
                 raise ValueError("Unsupported constructor value")
 
     @property
+    def inverse(self):
+        return SquareSet(~self.value)
+
+    @property
+    def as_bool(self):
+        return bool(self.value)
+
+    @property
+    def as_int(self):
+        return self.value
+
+    def union(self, other: any):
+        return SquareSet(self.value | SquareSet(other).value)
+
+    def intersect(self, other: any):
+        return SquareSet(self.value & SquareSet(other).value)
+
+    def difference(self, other: any):
+        return SquareSet(self.value & ~SquareSet(other).value)
+
+    def is_subset_of(self, other: any):
+        return self.value == (self.value & SquareSet(other).value)
+
+    def is_subset(self, other: any):
+        other = SquareSet(other)
+        return other.value == (self.value & other.value)
+
+    def is_proper_subset_of(self, other: any):
+        other = SquareSet(other)
+        return self.is_subset_of(other) and self.value != other.value
+
+    def is_proper_subset(self, other: any):
+        other = SquareSet(other).value
+        return self.value == (other & self.value) and self.value != other
+
+    def is_superset_of(self, other: any):
+        other = SquareSet(other)
+        return other.value == (other.value & self.value)
+
+    def is_superset(self, other: any):
+        return self.value == (SquareSet(other).value & self.value)
+
+    def is_proper_superset_of(self, other: any):
+        return self.is_superset_of(other) and self.value != SquareSet(other).value
+
+    def is_proper_superset(self, other: any):
+        return self.is_superset(other) and self.value != SquareSet(other).value
+
+    def __add__(self, other):
+        return self.union(other)
+
+    def __and__(self, other):
+        return self.intersect(other)
+
+    def __bool__(self):
+        return bool(self.value)
+
+    def __bytes__(self):
+        return bytes(self.value)
+
+    def __contains__(self, item):
+        return self.is_superset_of(item)
+
+    def __copy__(self):
+        return SquareSet(self.value)
+
+    def __ge__(self, other):
+        return self.is_superset_of(other)
+
+    def __gt__(self, other):
+        return self.is_proper_superset_of(other)
+
+    def __hex__(self):
+        return hex(self.value)
+
+    @property
     def value(self):
         return self._value
 
@@ -172,85 +249,75 @@ class SquareSet:
     def squares(self) -> List[Square]:
         return list(self)
 
-    def __iter__(self):
-        for i in range(64):
-            mask = 1 << i
-            if self.value & mask:
-                yield Square(i)
+    def __eq__(self, o: object) -> bool:
+        return super().__eq__(o)
 
-    def __contains__(self, item):
-        if not item:
-            return True
-        if type(item) == SquareSet:
-            return self.value & item.value == self.value
-        if type(item) == Square:
-            return self.value & item.mask
-        return self.value & SquareSet(item).value
+    def __ne__(self, o: object) -> bool:
+        return super().__ne__(o)
 
-    def __len__(self):
-        return self.value.bit_count()
+    def __str__(self) -> str:
+        return super().__str__()
 
-    def __str__(self):
-        algebraic = [s.name for s in iter(self)]
-        return ",".join(algebraic)
+    def __repr__(self) -> str:
+        return super().__repr__()
 
-    def __int__(self):
-        return self.value
-
-    def __eq__(self, other):
-        if other is None:
-            return False
-        return self.value == SquareSet(other).value
-
-    def __hex__(self):
-        return hex(self.value)
-
-    def __neg__(self):
-        return SquareSet(~self.value)
-
-    def __bool__(self):
-        return bool(self.value)
-
-    def __add__(self, other):
-        return SquareSet(self.value | SquareSet(other).value)
-
-    def __pos__(self):
-        return self
-
-    def __abs__(self):
-        return self
-
-    def __oct__(self):
-        return oct(self.value)
-
-    def __ceil__(self):
-        return self
-
-    def __copy__(self):
-        return SquareSet(self)
+    def __hash__(self) -> int:
+        return super().__hash__()
 
 
-    def __hash__(self):
-        return self.value
 
-    def __aiter__(self):
-        return iter(self)
+s = Dict()
 
-    def __long__(self):
-        return self.value
+s.all = [Square(i) for i in range(64)]
+s.none = []
+s.empty = []
 
-    def __repr__(self):
-        return f"SquareSet({self.value:08x})"
+s.starting.white = [sq for sq in s.all if sq.rank in [1,2]]
+s.starting.white.king = Square("e1")
+s.starting.white.queen = Square("d1")
+s.starting.white.bishops = [Square("c1"), Square("f1")]
+s.starting.white.knights = [Square("b1"), Square("g1")]
+s.starting.white.rooks = [Square("a1"), Square("h1")]
+s.starting.white.pawns = [sq for sq in s.all if sq.rank == 2]
+s.starting.black = [sq for sq in s.all if sq.rank in [7,8]]
+s.starting.black.king = Square("e8")
+s.starting.black.queen = Square("d8")
+s.starting.black.bishops = [Square("c8"), Square("f8")]
+s.starting.black.knights = [Square("b8"), Square("g8")]
+s.starting.black.rooks = [Square("a8"), Square("h8")]
+s.starting.black.pawns = [sq for sq in s.all if sq.rank == 7]
+s.starting.pawns = [sq for sq in s.all if sq.rank in [2,7]]
+s.starting.knights = [sq for sq in s.all if sq.name in "b1,g1,b8,g8"]
+s.starting.bishops = [sq for sq in s.all if sq.name in "c1,f1,c8,f8"]
+s.starting.rooks = [sq for sq in s.all if sq.name in "a1,h1,a8,h8"]
+s.starting.queens = [Square("d1"), Square("d8")]
+s.starting.kings = [Square("e1"), Square("e8")]
+s.white.promotion = [sq for sq in s.all if sq.rank == 8]
+s.white.castling.short.blockable = [sq for sq in s.all if s.name in "f1,g1"]
+s.white.castling.short.checkable = [sq for sq in s.all if s.name in "f1,g1"]
+s.white.castling.short.king = [Square("g1")]
+s.white.castling.short.rook = [Square("f1")]
 
-    def __bytes__(self):
-        return bytes(self.value)
-
-    def __delitem__(self, key):
-        return SquareSet(self.value & ~SquareSet(key).value)
-
-    def __and__(self, other):
-        return SquareSet(self.value & SquareSet(other).value)
 
 
-squares = frozenset([Square(i) for i in range(64)])
-squareLookup = frozenset({s.name: s for s in squares})
+
+
+s.black.promotion = [sq for sq in s.all if sq.rank == 1]
+s.rank._1 = [sq for sq in s.all if s.rank == 1]
+s.rank._2 = [sq for sq in s.all if s.rank == 2]
+s.rank._3 = [sq for sq in s.all if s.rank == 3]
+s.rank._4 = [sq for sq in s.all if s.rank == 4]
+s.rank._5 = [sq for sq in s.all if s.rank == 5]
+s.rank._6 = [sq for sq in s.all if s.rank == 6]
+s.rank._7 = [sq for sq in s.all if s.rank == 7]
+s.rank._8 = [sq for sq in s.all if s.rank == 8]
+s.file.a = [sq for sq in s.all if sq.file == "a"]
+s.file.b = [sq for sq in s.all if sq.file == "b"]
+s.file.c = [sq for sq in s.all if sq.file == "c"]
+s.file.d = [sq for sq in s.all if sq.file == "d"]
+s.file.e = [sq for sq in s.all if sq.file == "e"]
+s.file.f = [sq for sq in s.all if sq.file == "f"]
+s.file.g = [sq for sq in s.all if sq.file == "g"]
+s.file.h = [sq for sq in s.all if sq.file == "h"]
+
+
