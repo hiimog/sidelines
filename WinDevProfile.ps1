@@ -14,6 +14,19 @@ function gotemp {
     Set-Location c:\temp
 }
 
+function goroot {
+    Set-Location c:\src\sidelines
+}
+
+function l {
+    Param (
+        [Parameter(ValueFromRemainingArguments = $true)]
+        [string[]]
+        $TheRest
+    )
+    Get-ChildItem @TheRest
+}
+
 function mkcd {
     param (
         [string] $Dir
@@ -28,3 +41,7 @@ function mkcd {
 function copyguid {
     Set-Clipboard -Value ([guid]::NewGuid().ToString())
 }
+
+Remove-Item alias:wget 
+
+
