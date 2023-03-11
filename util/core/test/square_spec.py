@@ -230,15 +230,35 @@ def squareset_should_offer_basic_set_operations():
         Case("difference superset", lambda _: SS("a3,b3,g3").difference("a3,c5,b3,b7,b8,g3"), ss.none),
     ]
 
+    for name, sut, want in cases:
+        if callable(sut):
+            sut = sut()
+        assert sut == want, name
+
 
 def squareset_should_offer_subset_methods():
     @dc.dataclass
     class Case:
         name: str
         sut: Callable[bool]
-        want: bool
+
+        def __iter__(self):
+            return iter([self.name, self.sut])
 
     cases = [
-        Case("all is subset none", lambda _: ss.all.is_subset(ss.none), True),
-        Case("none is subset all", lambda _: ss.none.is_subset(ss.all), False),
+        Case("white starting pawns is subset of all white starting",
+             lambda _: ss.white.starting.pawns.is_subset_of(ss.white.starting)),
+        Case("white starting pawns is proper subset of all white starting",
+             lambda _: ss.white.starting.pawns.is_proper_subset_of(ss.white.starting)),
+        Case("all black starting is superset of black rooks",
+             lambda _: ss.black.starting.all.is_superset_of(ss.black.starting.rooks)),
+        Case("starting pawns is proper superset of rank 7",
+             lambda _: ss.starting.pawns.is_proper_superset_of(ss.rank.r7)),
+        Case("white starting has subset white starting", lambda _: ss.white.starting.has_subset(ss.white.starting)),
+        Case("white starting does not have proper subset white starting",
+             lambda _: not ss.white.starting.has_proper_subset(ss.white.starting)),
+        Case("starting white has superset starting all", lambda _: ss.white.starting.has_superset(ss.starting.all))
     ]
+
+    for name, sut in cases:
+        assert sut(), name

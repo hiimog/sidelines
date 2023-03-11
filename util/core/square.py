@@ -172,7 +172,7 @@ class SquareSet:
     def is_subset_of(self, other: any):
         return self.value == (self.value & SquareSet(other).value)
 
-    def is_subset(self, other: any):
+    def has_subset(self, other: any):
         other = SquareSet(other)
         return other.value == (self.value & other.value)
 
@@ -180,7 +180,7 @@ class SquareSet:
         other = SquareSet(other)
         return self.is_subset_of(other) and self.value != other.value
 
-    def is_proper_subset(self, other: any):
+    def has_proper_subset(self, other: any):
         other = SquareSet(other).value
         return self.value == (other & self.value) and self.value != other
 
@@ -188,14 +188,14 @@ class SquareSet:
         other = SquareSet(other)
         return other.value == (other.value & self.value)
 
-    def is_superset(self, other: any):
+    def has_superset(self, other: any):
         return self.value == (SquareSet(other).value & self.value)
 
     def is_proper_superset_of(self, other: any):
         return self.is_superset_of(other) and self.value != SquareSet(other).value
 
-    def is_proper_superset(self, other: any):
-        return self.is_superset(other) and self.value != SquareSet(other).value
+    def has_proper_superset(self, other: any):
+        return self.has_superset(other) and self.value != SquareSet(other).value
 
     def __add__(self, other):
         return self.union(other)
@@ -283,14 +283,14 @@ s.starting.rooks = [sq for sq in s.all if sq.name in "a1,h1,a8,h8"]
 s.starting.queens = [SQ("d1"), SQ("d8")]
 s.starting.kings = [SQ("e1"), SQ("e8")]
 
-s.rank._1 = [sq for sq in s.all if s.rank == 1]
-s.rank._2 = [sq for sq in s.all if s.rank == 2]
-s.rank._3 = [sq for sq in s.all if s.rank == 3]
-s.rank._4 = [sq for sq in s.all if s.rank == 4]
-s.rank._5 = [sq for sq in s.all if s.rank == 5]
-s.rank._6 = [sq for sq in s.all if s.rank == 6]
-s.rank._7 = [sq for sq in s.all if s.rank == 7]
-s.rank._8 = [sq for sq in s.all if s.rank == 8]
+s.rank.r1 = [sq for sq in s.all if s.rank == 1]
+s.rank.r2 = [sq for sq in s.all if s.rank == 2]
+s.rank.r3 = [sq for sq in s.all if s.rank == 3]
+s.rank.r4 = [sq for sq in s.all if s.rank == 4]
+s.rank.r5 = [sq for sq in s.all if s.rank == 5]
+s.rank.r6 = [sq for sq in s.all if s.rank == 6]
+s.rank.r7 = [sq for sq in s.all if s.rank == 7]
+s.rank.r8 = [sq for sq in s.all if s.rank == 8]
 
 s.file.a = [sq for sq in s.all if sq.file == "a"]
 s.file.b = [sq for sq in s.all if sq.file == "b"]
