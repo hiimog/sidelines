@@ -14,7 +14,7 @@ def square_should_be_constructible():
         def __iter__(self):
             return iter([self.name, self.value, self.want])
 
-    dummy = Square()
+    dummy = SQ()
     dummy._idx = 42
     cases = [
         Case("None", None, 0),
@@ -26,7 +26,7 @@ def square_should_be_constructible():
     ]
     for name, value, want in cases:
         try:
-            sq = Square(value)
+            sq = SQ(value)
         except:
             pytest.fail(f"Square construction failed for case \"{name}\"")
         assert sq.index == want, name
@@ -52,7 +52,7 @@ def square_should_validate_parameters_to_constructor():
     ]
     for name, value, want in cases:
         with pytest.raises(ValueError, match=want):
-            Square(value)
+            SQ(value)
 
 
 def square_should_expose_accurate_convenience_properties():
@@ -79,11 +79,11 @@ def square_should_expose_accurate_convenience_properties():
             return iter([self.name, self.sut, self.want])
 
     cases = [
-        Case("0 - a1 - 0,0 - black", Square(c.A1),
+        Case("0 - a1 - 0,0 - black", SQ(c.A1),
              Props("a1", c.A1, 0, 0, 1, "a", False, True, 1 << c.A1, f"{1 << c.A1:063b}")),
-        Case("8 - a2 - 1,0 - white", Square(c.A2),
+        Case("8 - a2 - 1,0 - white", SQ(c.A2),
              Props("a2", c.A2, 1, 0, 2, "a", True, False, 1 << c.A2, f"{1 << c.A2:063b}")),
-        Case("63 - h8 - 7,8 - black", Square(c.H8),
+        Case("63 - h8 - 7,8 - black", SQ(c.H8),
              Props("h8", c.H8, 7, 7, 8, "h", False, True, 1 << c.H8, f"{1 << c.H8:063b}")),
     ]
 
@@ -114,9 +114,9 @@ def square_should_recognize_promotion_squares():
             return iter([self.name, self.sut, self.want])
 
     cases = [
-        Case("a1 promote for black", Square(0), (False, True, True)),
-        Case("e8 promote for white", Square(c.E8), (True, False, True)),
-        Case("f5 promote for neither", Square(c.F5), (False, False, False)),
+        Case("a1 promote for black", SQ(0), (False, True, True)),
+        Case("e8 promote for white", SQ(c.E8), (True, False, True)),
+        Case("f5 promote for neither", SQ(c.F5), (False, False, False)),
     ]
 
     for name, square, want in cases:
@@ -140,15 +140,15 @@ def square_should_have_equality_with_several_types():
             return iter([self.name, self.sut, self.other, self.want])
 
     cases = [
-        Case("Not equal None", Square(0), None, False),
-        Case("Squares equal", Square(42), Square(42), True),
-        Case("Squares not equal", Square(42), Square(24), False),
-        Case("ints equal", Square(42), 42, True),
-        Case("ints not equal", Square(42), 24, False),
-        Case("algebraic equal", Square(42), "c6", True),
-        Case("algebraic not equal", Square(42), "a3", False),
-        Case("Never equal to bool", Square(0), False, False),
-        Case("Never equal to dict", Square(0), dict(), False),
+        Case("Not equal None", SQ(0), None, False),
+        Case("Squares equal", SQ(42), SQ(42), True),
+        Case("Squares not equal", SQ(42), SQ(24), False),
+        Case("ints equal", SQ(42), 42, True),
+        Case("ints not equal", SQ(42), 24, False),
+        Case("algebraic equal", SQ(42), "c6", True),
+        Case("algebraic not equal", SQ(42), "a3", False),
+        Case("Never equal to bool", SQ(0), False, False),
+        Case("Never equal to dict", SQ(0), dict(), False),
     ]
     for name, square, other, want in cases:
         got = square == other
@@ -171,14 +171,14 @@ def squareset_should_be_constructible():
         Case("a1", "a1", 0x1),
         Case("e4 e5", ["e4", "d5"], (c.BB_E4 | c.BB_D5)),
         Case("Comma separated list", "a1,e4", (c.BB_A1 | c.BB_E4)),
-        Case("mixed list a1 e4 g7", [s_all[0], "e4", c.BB_G7], (c.BB_A1 | c.BB_E4 | c.BB_G7)),
+        Case("mixed list a1 e4 g7", [s.all[0], "e4", c.BB_G7], (c.BB_A1 | c.BB_E4 | c.BB_G7)),
     ]
 
     for name, value, want in cases:
         try:
-            ss = SquareSet(value)
+            ss = SS(value)
         except:
-            pytest.fail(f"SquareSet construction failed for case \"{name}\"")
+            pytest.fail(f"SS construction failed for case \"{name}\"")
         assert ss.value == want, name
 
 
@@ -186,54 +186,52 @@ def squareset_should_enumerate_squares():
     @dc.dataclass
     class Case:
         name: str
-        sut: SquareSet
+        sut: SS
         want: Set[Square]
 
         def __iter__(self):
             return iter([self.name, self.sut, self.want])
 
     cases = [
-        Case("Empty squareset", SquareSet(0), set([])),
-        Case("Single square", SquareSet("a1"), {Square("a1")}),
-        Case("Several squares", SquareSet("a1,a2,a3,a4"), set([s_all[i] for i in range(4)])),
-        Case("All squares", SquareSet(c.BB_ALL), set(s_all)),
+        Case("Empty squareset", SS(0), set([])),
+        Case("Single square", SS("a1"), {SQ("a1")}),
+        Case("Several squares", SS("a1,a2,a3,a4"), set([s.all[i] for i in range(4)])),
+        Case("All squares", SS(c.BB_ALL), set(s.all)),
     ]
-
-    for name, squareset, want in cases:
-        pass
 
 
 def squareset_should_offer_basic_set_operations():
     @dc.dataclass
     class Case:
         name: str
-        sut: SquareSet | Callable[SquareSet]
-        want: SquareSet
+        sut: SS | Callable[SS]
+        want: SS
 
         def __iter__(self):
             return iter([self.name, self.sut, self.want])
 
     cases = [
-        Case("0 inverse", lambda _: SquareSet(0).inverse(), ss_all),
-        Case("all inverse", lambda _: ss_all.inverse(), ss_empty),
-        Case("random inverse", lambda _: SquareSet(c.BB_A1 | c.BB_F5 | c.BB_A7).inverse(),
-             SquareSet(c.BB_ALL & ~(c.BB_A1 | c.BB_F5 | c.BB_A7))),
-        Case("union all none", lambda _: ss_all.union(ss_empty), ss_all),
-        Case("union typical", lambda _: SquareSet("a1,g3,f8").union("b4,g3,a1,g8"), SquareSet("a1,b4,f8,g3,g8")),
-        Case("union self", lambda _: SquareSet("a1,b3,f4").union(SquareSet("a1,b3,f4")), SquareSet("a1,b3,f4")),
-        Case("intersection all none", lambda _: ss_all.intersect(ss_empty), ss_empty),
-        Case("intersection all, all", lambda _: ss_all.intersect(ss_all), ss_all),
-        Case("intersection typical", lambda _: SquareSet("f3,g8,f2").intersect("f8,f2"), SquareSet("f2")),
-        Case("intersection disjoint", lambda _:SquareSet("a1,b3").intersect("f3f8"), ss_empty),
-        Case("intersection self", lambda _: SquareSet("a1,b2").intersect("a1,b2"), SquareSet("a1,b2")),
-        Case("difference all none", lambda _: ss_all.difference(ss_empty), ss_all),
-        Case("difference all all", lambda _: ss_all.difference(ss_all), ss_empty),
-        Case("difference none all", lambda _: ss_empty.difference(ss_all), ss_empty),
-        Case("difference typical", lambda _: SquareSet("a1,f4,c3,c2").difference("c2,f4,g8"), SquareSet("a1,c3")),
-        Case("difference superset", lambda _: SquareSet("a3,b3,g3").difference("a3,c5,b3,b7,b8,g3"), ss_empty),
+        Case("0 inverse", lambda _: SS(0).inverse(), ss.all),
+        Case("all inverse", lambda _: ss.all.inverse(), ss.none),
+        Case("random inverse", lambda _: SS(c.BB_A1 | c.BB_F5 | c.BB_A7).inverse(),
+             SS(c.BB_ALL & ~(c.BB_A1 | c.BB_F5 | c.BB_A7))),
+        Case("union all none", lambda _: ss.all.union(ss.none), ss.all),
+        Case("union typical", lambda _: SS("a1,g3,f8").union("b4,g3,a1,g8"), SS("a1,b4,f8,g3,g8")),
+        Case("union self", lambda _: SS("a1,b3,f4").union(SS("a1,b3,f4")), SS("a1,b3,f4")),
+        Case("intersection all none", lambda _: ss.all.intersect(ss.none), ss.none),
+        Case("intersection all, all", lambda _: ss.all.intersect(ss.all), ss.all),
+        Case("intersection typical", lambda _: SS("f3,g8,f2").intersect("f8,f2"), SS("f2")),
+        Case("intersection disjoint", lambda _: SS("a1,b3").intersect("f3f8"), ss.none),
+        Case("intersection self", lambda _: SS("a1,b2").intersect("a1,b2"), SS("a1,b2")),
+        Case("difference all none", lambda _: ss.all.difference(ss.none), ss.all),
+        Case("difference all all", lambda _: ss.all.difference(ss.all), ss.none),
+        Case("difference none all", lambda _: ss.none.difference(ss.all), ss.none),
+        Case("difference typical", lambda _: SS("a1,f4,c3,c2").difference("c2,f4,g8"), SS("a1,c3")),
+        Case("difference superset", lambda _: SS("a3,b3,g3").difference("a3,c5,b3,b7,b8,g3"), ss.none),
     ]
 
-def squareset_should_offer_set_subtest_methods():
+
+def squareset_should_offer_subset_methods():
     @dc.dataclass
     class Case:
         name: str
@@ -241,6 +239,6 @@ def squareset_should_offer_set_subtest_methods():
         want: bool
 
     cases = [
-        Case("all is subset none", lambda _: ss_all.is_subset(ss_empty), True),
-        Case("none is subset all", lambda _:ss_empty.is_subset(ss_all), False),
+        Case("all is subset none", lambda _: ss.all.is_subset(ss.none), True),
+        Case("none is subset all", lambda _: ss.none.is_subset(ss.all), False),
     ]

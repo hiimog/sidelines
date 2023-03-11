@@ -123,6 +123,9 @@ class Square:
         return False
 
 
+SQ = Square
+
+
 class SquareSet:
     def __init__(self, initial: any = None):
         self._value = 0
@@ -265,6 +268,7 @@ class SquareSet:
         return super().__hash__()
 
 
+SS = SquareSet
 
 s = Dict()
 
@@ -272,37 +276,13 @@ s.all = [Square(i) for i in range(64)]
 s.none = []
 s.empty = []
 
-s.starting.white = [sq for sq in s.all if sq.rank in [1,2]]
-s.starting.white.king = Square("e1")
-s.starting.white.queen = Square("d1")
-s.starting.white.bishops = [Square("c1"), Square("f1")]
-s.starting.white.knights = [Square("b1"), Square("g1")]
-s.starting.white.rooks = [Square("a1"), Square("h1")]
-s.starting.white.pawns = [sq for sq in s.all if sq.rank == 2]
-s.starting.black = [sq for sq in s.all if sq.rank in [7,8]]
-s.starting.black.king = Square("e8")
-s.starting.black.queen = Square("d8")
-s.starting.black.bishops = [Square("c8"), Square("f8")]
-s.starting.black.knights = [Square("b8"), Square("g8")]
-s.starting.black.rooks = [Square("a8"), Square("h8")]
-s.starting.black.pawns = [sq for sq in s.all if sq.rank == 7]
-s.starting.pawns = [sq for sq in s.all if sq.rank in [2,7]]
+s.starting.pawns = [sq for sq in s.all if sq.rank in [2, 7]]
 s.starting.knights = [sq for sq in s.all if sq.name in "b1,g1,b8,g8"]
 s.starting.bishops = [sq for sq in s.all if sq.name in "c1,f1,c8,f8"]
 s.starting.rooks = [sq for sq in s.all if sq.name in "a1,h1,a8,h8"]
-s.starting.queens = [Square("d1"), Square("d8")]
-s.starting.kings = [Square("e1"), Square("e8")]
-s.white.promotion = [sq for sq in s.all if sq.rank == 8]
-s.white.castling.short.blockable = [sq for sq in s.all if s.name in "f1,g1"]
-s.white.castling.short.checkable = [sq for sq in s.all if s.name in "f1,g1"]
-s.white.castling.short.king = [Square("g1")]
-s.white.castling.short.rook = [Square("f1")]
+s.starting.queens = [SQ("d1"), SQ("d8")]
+s.starting.kings = [SQ("e1"), SQ("e8")]
 
-
-
-
-
-s.black.promotion = [sq for sq in s.all if sq.rank == 1]
 s.rank._1 = [sq for sq in s.all if s.rank == 1]
 s.rank._2 = [sq for sq in s.all if s.rank == 2]
 s.rank._3 = [sq for sq in s.all if s.rank == 3]
@@ -311,6 +291,7 @@ s.rank._5 = [sq for sq in s.all if s.rank == 5]
 s.rank._6 = [sq for sq in s.all if s.rank == 6]
 s.rank._7 = [sq for sq in s.all if s.rank == 7]
 s.rank._8 = [sq for sq in s.all if s.rank == 8]
+
 s.file.a = [sq for sq in s.all if sq.file == "a"]
 s.file.b = [sq for sq in s.all if sq.file == "b"]
 s.file.c = [sq for sq in s.all if sq.file == "c"]
@@ -320,4 +301,41 @@ s.file.f = [sq for sq in s.all if sq.file == "f"]
 s.file.g = [sq for sq in s.all if sq.file == "g"]
 s.file.h = [sq for sq in s.all if sq.file == "h"]
 
+s.white.starting.all = [sq for sq in s.all if sq.rank in [1, 2]]
+s.white.starting.king = SQ("e1")
+s.white.starting.queen = SQ("d1")
+s.white.starting.bishops = [SQ("c1"), SQ("f1")]
+s.white.starting.knights = [SQ("b1"), SQ("g1")]
+s.white.starting.rooks = [SQ("a1"), SQ("h1")]
+s.white.starting.pawns = [sq for sq in s.all if sq.rank == 2]
+s.white.promotion = [sq for sq in s.all if sq.rank == 8]
+s.white.castling.short.blockable = [sq for sq in s.all if sq.name in "f1,g1"]
+s.white.castling.short.checkable = [sq for sq in s.all if sq.name in "f1,g1"]
+s.white.castling.short.king = [SQ("g1")]
+s.white.castling.short.rook = [SQ("f1")]
 
+s.black.starting.all = [sq for sq in s.all if sq.rank in [7, 8]]
+s.black.starting.king = SQ("e8")
+s.black.starting.queen = SQ("d8")
+s.black.starting.bishops = [SQ("c8"), SQ("f8")]
+s.black.starting.knights = [SQ("b8"), SQ("g8")]
+s.black.starting.rooks = [SQ("a8"), SQ("h8")]
+s.black.starting.pawns = [sq for sq in s.all if sq.rank == 7]
+s.black.promotion = [sq for sq in s.all if sq.rank == 1]
+s.black.castling.short.blockable = [sq for sq in s.all if sq.name in "f8,g8"]
+s.black.castling.short.checkable = [sq for sq in s.all if sq.name in "f8,g8"]
+s.black.castling.short.king = [SQ("g8")]
+s.black.castling.short.rook = [SQ("f8")]
+
+ss = Dict(s)
+
+
+def _make_squaresets(root: Dict):
+    for key, val in root.items():
+        if type(val) in [SQ, list]:
+            root[key] = SS(val)
+        if type(val) == Dict:
+            _make_squaresets(val)
+
+
+_make_squaresets(ss)
