@@ -1,6 +1,7 @@
 import re
 from typing import *
 from addict import Dict
+from bitarray import frozenbitarray, bitarray, util
 
 ALGEBRAIC_REGEX = re.compile("^[a-h][1-8]$", re.I)
 WHITE = "white"
@@ -9,8 +10,17 @@ EITHER = "either"
 SideNames = Literal["white", "black", "either"]
 
 
+def int2fba(i):
+    return frozenbitarray(util.int2ba(i, 64))
+
+
+def int2ba(i):
+    return util.int2ba(i, 64)
+
+
 class Square:
     def __init__(self, which: any = None):
+        self._idx = 0
         if which is None:
             self._idx = 0
             return
@@ -86,11 +96,11 @@ class Square:
 
     @property
     def mask(self):
-        return 1 << self.index
+        return util.int2ba(1 << self.index, 64)
 
     @property
     def smask(self):
-        return f"{self.mask:063b}"
+        return self.mask.to01()
 
     def is_promotion(self, side: SideNames = EITHER):
         if side == WHITE:
@@ -105,7 +115,7 @@ class Square:
         return self.name
 
     def __repr__(self):
-        return f"Square({self.index})"
+        return f"Square({self.name})"
 
     def __int__(self):
         return self.index
@@ -131,25 +141,31 @@ SQ = Square
 
 class SquareSet:
     def __init__(self, initial: any = None):
-        self._value = 0
+        self._value = int2fba(0)
         if initial is None:
             return
         tipe = type(initial)
         if tipe == SquareSet:
             self._value = initial.value
         elif tipe == int:
-            self._value = initial
+            self._value = int2fba(initial)
         elif tipe == list:
             self._init_from_list(initial)
         elif tipe == str:
             self._init_from_str(initial)
         elif tipe == Square:
-            self._value = initial.mask
+            self._value = frozenbitarray(initial.mask)
+        elif tipe in [frozenbitarray, bitarray]:
+            self._value = frozenbitarray(initial)
         else:
             try:
-                self._value = Square(initial).mask
+                self._value = frozenbitarray(Square(initial).mask)
             except:
                 raise ValueError("Unsupported constructor value")
+
+    @property
+    def value(self):
+        return self._value
 
     @property
     def inverse(self):
@@ -161,7 +177,7 @@ class SquareSet:
 
     @property
     def as_int(self):
-        return self.value
+        return util.ba2int(self.value)
 
     def union(self, other: any):
         return SquareSet(self.value | SquareSet(other).value)
@@ -225,18 +241,14 @@ class SquareSet:
         return self.is_proper_superset_of(other)
 
     def __hex__(self):
-        return hex(self.value)
-
-    @property
-    def value(self):
-        return self._value
+        return util.ba2hex(self.value)
 
     def _init_from_str(self, initial: str):
         trimmed = [s.strip() for s in initial.split(",")]
         self._init_from_list(trimmed)
 
     def _init_from_list(self, initial: list) -> None:
-        acc = 0
+        acc = util.int2ba(0, 64)
         for i, item in enumerate(initial):
             tipe = type(item)
             if tipe == SquareSet:
@@ -244,31 +256,48 @@ class SquareSet:
             elif tipe == Square:
                 acc |= item.mask
             elif tipe == int:
-                acc |= item
+                acc |= util.int2ba(item, 64)
             else:
                 try:
                     acc |= Square(item).mask
                 except:
                     raise ValueError(f"item {i}: \"{item}\" can not be part of a SquareSet")
-        self._value = acc
+        self._value = frozenbitarray(acc)
 
     def squares(self) -> List[Square]:
-        return list(self)
+        res = []
+        for i in range(64):
+            ba = util.int2ba(0, 64)
+            ba.invert(i)
+            if bool(ba & self.value):
+                res.append(Square(i))
+        return res
 
     def __eq__(self, o: object) -> bool:
-        return super().__eq__(o)
+        if o is None:
+            return False
+        try:
+            other = SS(o)
+            return self.value == other.value
+        except:
+            return False
 
     def __ne__(self, o: object) -> bool:
-        return super().__ne__(o)
+        return not self.__eq__(o)
 
     def __str__(self) -> str:
-        return super().__str__()
+        res = []
+        for i in range(64):
+            if not self.value[i]:
+                continue
+            res.append(Square(i).name)
+        return "SS(" + ",".join(res) + ")"
 
     def __repr__(self) -> str:
-        return super().__repr__()
+        return self.__str__()
 
     def __hash__(self) -> int:
-        return super().__hash__()
+        return util.ba2int(self.value)
 
 
 SS = SquareSet
@@ -317,6 +346,10 @@ s.white.castling.short.blockable = [sq for sq in s.all if sq.name in "f1,g1"]
 s.white.castling.short.checkable = [sq for sq in s.all if sq.name in "f1,g1"]
 s.white.castling.short.king = [SQ("g1")]
 s.white.castling.short.rook = [SQ("f1")]
+s.white.castling.long.blockable = [sq for sq in s.all if sq.name in "d1, c1, b1"]
+s.white.castling.long.checkable = [sq for sq in s.all if sq.name in "d1, c1"]
+s.white.castling.long.king = [SQ("c1")]
+s.white.castling.long.rook = [SQ("d1")]
 
 s.black.starting.all = [sq for sq in s.all if sq.rank in [7, 8]]
 s.black.starting.king = SQ("e8")
@@ -324,12 +357,16 @@ s.black.starting.queen = SQ("d8")
 s.black.starting.bishops = [SQ("c8"), SQ("f8")]
 s.black.starting.knights = [SQ("b8"), SQ("g8")]
 s.black.starting.rooks = [SQ("a8"), SQ("h8")]
-s.black.starting.pawns = [sq for sq in s.all if sq.rank == 7]
-s.black.promotion = [sq for sq in s.all if sq.rank == 1]
+s.black.starting.pawns = [sq for sq in s.all if sq.rank == 2]
+s.black.promotion = [sq for sq in s.all if sq.rank == 8]
 s.black.castling.short.blockable = [sq for sq in s.all if sq.name in "f8,g8"]
 s.black.castling.short.checkable = [sq for sq in s.all if sq.name in "f8,g8"]
 s.black.castling.short.king = [SQ("g8")]
 s.black.castling.short.rook = [SQ("f8")]
+s.black.castling.long.blockable = [sq for sq in s.all if sq.name in "d8, c8, b8"]
+s.black.castling.long.checkable = [sq for sq in s.all if sq.name in "d8, c8"]
+s.black.castling.long.king = [SQ("c8")]
+s.black.castling.long.rook = [SQ("d8")]
 
 ss = Dict(s)
 

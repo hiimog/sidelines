@@ -66,7 +66,7 @@ def square_should_expose_accurate_convenience_properties():
         file: str
         white: bool
         black: bool
-        mask: int
+        mask: bitarray
         smask: str
 
     @dc.dataclass
@@ -80,11 +80,11 @@ def square_should_expose_accurate_convenience_properties():
 
     cases = [
         Case("0 - a1 - 0,0 - black", SQ(c.A1),
-             Props("a1", c.A1, 0, 0, 1, "a", False, True, 1 << c.A1, f"{1 << c.A1:063b}")),
+             Props("a1", c.A1, 0, 0, 1, "a", False, True, int2ba(2 ** c.A1), util.int2ba(2 ** c.A1, 64).to01())),
         Case("8 - a2 - 1,0 - white", SQ(c.A2),
-             Props("a2", c.A2, 1, 0, 2, "a", True, False, 1 << c.A2, f"{1 << c.A2:063b}")),
+             Props("a2", c.A2, 1, 0, 2, "a", True, False, int2ba(2 ** c.A2), util.int2ba(2 ** c.A2, 64).to01())),
         Case("63 - h8 - 7,8 - black", SQ(c.H8),
-             Props("h8", c.H8, 7, 7, 8, "h", False, True, 1 << c.H8, f"{1 << c.H8:063b}")),
+             Props("h8", c.H8, 7, 7, 8, "h", False, True, int2ba(2 ** c.H8), util.int2ba(2 ** c.H8, 64).to01())),
     ]
 
     for name, square, want in cases:
@@ -166,12 +166,12 @@ def squareset_should_be_constructible():
             return iter([self.name, self.value, self.want])
 
     cases = [
-        Case("int", 42, 42),
-        Case("zero case", 0, 0),
-        Case("a1", "a1", 0x1),
-        Case("e4 e5", ["e4", "d5"], (c.BB_E4 | c.BB_D5)),
-        Case("Comma separated list", "a1,e4", (c.BB_A1 | c.BB_E4)),
-        Case("mixed list a1 e4 g7", [s.all[0], "e4", c.BB_G7], (c.BB_A1 | c.BB_E4 | c.BB_G7)),
+        Case("int", 42, int2fba(42)),
+        Case("zero case", 0, int2fba(0)),
+        Case("a1", "a1", int2fba(1)),
+        Case("e4 e5", ["e4", "d5"], int2fba(c.BB_E4 | c.BB_D5)),
+        Case("Comma separated list", "a1,e4", int2fba(c.BB_A1 | c.BB_E4)),
+        Case("mixed list a1 e4 g7", [s.all[0], "e4", c.BB_G7], int2fba(c.BB_A1 | c.BB_E4 | c.BB_G7)),
     ]
 
     for name, value, want in cases:
@@ -231,7 +231,7 @@ def squareset_should_offer_basic_set_operations():
     ]
 
     for name, sut, want in cases:
-        assert sut().__eq__(want), name
+        assert sut() == want, name
 
 
 
@@ -261,3 +261,21 @@ def squareset_should_offer_subset_methods():
 
     for name, sut in cases:
         assert sut(), name
+
+
+def squareset_should_have_intuitive_operators():
+    @dc.dataclass
+    class Case:
+        name: str
+        sut: Callable[[], SS]
+        want: SS
+
+        def __iter__(self):
+            return iter([self.name, self.sut, self.want])
+
+    cases = [
+        Case("+ performs union", lambda: ss.white.starting.all + ss.black.starting.all, ss.starting.all),
+    ]
+
+    for name, sut, want in cases:
+        assert sut() == want, name
