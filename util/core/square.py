@@ -38,7 +38,7 @@ class Square:
             raise ValueError("Unsupported constructor value")
 
     def _is_valid(self):
-        return 0 <= self._idx <= 63
+        return 0 <= self.index <= 63
 
     @property
     def index(self):
@@ -46,11 +46,11 @@ class Square:
 
     @property
     def row(self):
-        return self._idx // 8
+        return self.index // 8
 
     @property
     def col(self):
-        return self._idx % 8
+        return self.index % 8
 
     @property
     def row_col(self):
@@ -86,7 +86,7 @@ class Square:
 
     @property
     def mask(self):
-        return 1 << self._idx
+        return 1 << self.index
 
     @property
     def smask(self):
@@ -105,22 +105,25 @@ class Square:
         return self.name
 
     def __repr__(self):
-        return f"Square({self._idx})"
+        return f"Square({self.index})"
 
     def __int__(self):
-        return self._idx
+        return self.index
 
     def __eq__(self, other):
         if other is None:
             return False
         tipe = type(other)
         if tipe == int:
-            return self._idx == other
+            return self.index == other
         if tipe == Square:
-            return self._idx == other.index
+            return self.index == other.index
         if tipe == str:
             return self.name == other.lower()
         return False
+
+    def __hash__(self):
+        return self.index
 
 
 SQ = Square
@@ -276,6 +279,7 @@ s.all = [Square(i) for i in range(64)]
 s.none = []
 s.empty = []
 
+s.starting.all = [sq for sq in s.all if sq.rank in [1, 2, 7, 8]]
 s.starting.pawns = [sq for sq in s.all if sq.rank in [2, 7]]
 s.starting.knights = [sq for sq in s.all if sq.name in "b1,g1,b8,g8"]
 s.starting.bishops = [sq for sq in s.all if sq.name in "c1,f1,c8,f8"]

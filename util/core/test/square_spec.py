@@ -178,7 +178,7 @@ def squareset_should_be_constructible():
         try:
             ss = SS(value)
         except:
-            pytest.fail(f"SS construction failed for case \"{name}\"")
+            pytest.fail(f"SquareSet construction failed for case \"{name}\"")
         assert ss.value == want, name
 
 
@@ -204,60 +204,59 @@ def squareset_should_offer_basic_set_operations():
     @dc.dataclass
     class Case:
         name: str
-        sut: SS | Callable[SS]
+        sut: Callable[[], SS]
         want: SS
 
         def __iter__(self):
             return iter([self.name, self.sut, self.want])
 
     cases = [
-        Case("0 inverse", lambda _: SS(0).inverse(), ss.all),
-        Case("all inverse", lambda _: ss.all.inverse(), ss.none),
-        Case("random inverse", lambda _: SS(c.BB_A1 | c.BB_F5 | c.BB_A7).inverse(),
+        Case("0 inverse", lambda: SS(0).inverse, ss.all),
+        Case("all inverse", lambda: ss.all.inverse, ss.none),
+        Case("random inverse", lambda: SS(c.BB_A1 | c.BB_F5 | c.BB_A7).inverse,
              SS(c.BB_ALL & ~(c.BB_A1 | c.BB_F5 | c.BB_A7))),
-        Case("union all none", lambda _: ss.all.union(ss.none), ss.all),
-        Case("union typical", lambda _: SS("a1,g3,f8").union("b4,g3,a1,g8"), SS("a1,b4,f8,g3,g8")),
-        Case("union self", lambda _: SS("a1,b3,f4").union(SS("a1,b3,f4")), SS("a1,b3,f4")),
-        Case("intersection all none", lambda _: ss.all.intersect(ss.none), ss.none),
-        Case("intersection all, all", lambda _: ss.all.intersect(ss.all), ss.all),
-        Case("intersection typical", lambda _: SS("f3,g8,f2").intersect("f8,f2"), SS("f2")),
-        Case("intersection disjoint", lambda _: SS("a1,b3").intersect("f3f8"), ss.none),
-        Case("intersection self", lambda _: SS("a1,b2").intersect("a1,b2"), SS("a1,b2")),
-        Case("difference all none", lambda _: ss.all.difference(ss.none), ss.all),
-        Case("difference all all", lambda _: ss.all.difference(ss.all), ss.none),
-        Case("difference none all", lambda _: ss.none.difference(ss.all), ss.none),
-        Case("difference typical", lambda _: SS("a1,f4,c3,c2").difference("c2,f4,g8"), SS("a1,c3")),
-        Case("difference superset", lambda _: SS("a3,b3,g3").difference("a3,c5,b3,b7,b8,g3"), ss.none),
+        Case("union all none", lambda: ss.all.union(ss.none), ss.all),
+        Case("union typical", lambda: SS("a1,g3,f8").union("b4,g3,a1,g8"), SS("a1,b4,f8,g3,g8")),
+        Case("union self", lambda: SS("a1,b3,f4").union(SS("a1,b3,f4")), SS("a1,b3,f4")),
+        Case("intersection all none", lambda: ss.all.intersect(ss.none), ss.none),
+        Case("intersection all, all", lambda: ss.all.intersect(ss.all), ss.all),
+        Case("intersection typical", lambda: SS("f3,g8,f2").intersect("f8,f2"), SS("f2")),
+        Case("intersection disjoint", lambda: SS("a1,b3").intersect("f3,f8"), ss.none),
+        Case("intersection self", lambda: SS("a1,b2").intersect("a1,b2"), SS("a1,b2")),
+        Case("difference all none", lambda: ss.all.difference(ss.none), ss.all),
+        Case("difference all all", lambda: ss.all.difference(ss.all), ss.none),
+        Case("difference none all", lambda: ss.none.difference(ss.all), ss.none),
+        Case("difference typical", lambda: SS("a1,f4,c3,c2").difference("c2,f4,g8"), SS("a1,c3")),
+        Case("difference superset", lambda: SS("a3,b3,g3").difference("a3,c5,b3,b7,b8,g3"), ss.none),
     ]
 
     for name, sut, want in cases:
-        if callable(sut):
-            sut = sut()
-        assert sut == want, name
+        assert sut().__eq__(want), name
+
 
 
 def squareset_should_offer_subset_methods():
     @dc.dataclass
     class Case:
         name: str
-        sut: Callable[bool]
+        sut: Callable[[], bool]
 
         def __iter__(self):
             return iter([self.name, self.sut])
 
     cases = [
         Case("white starting pawns is subset of all white starting",
-             lambda _: ss.white.starting.pawns.is_subset_of(ss.white.starting)),
+             lambda: ss.white.starting.pawns.is_subset_of(ss.white.starting.all)),
         Case("white starting pawns is proper subset of all white starting",
-             lambda _: ss.white.starting.pawns.is_proper_subset_of(ss.white.starting)),
+             lambda: ss.white.starting.pawns.is_proper_subset_of(ss.white.starting .all)),
         Case("all black starting is superset of black rooks",
-             lambda _: ss.black.starting.all.is_superset_of(ss.black.starting.rooks)),
+             lambda: ss.black.starting.all.is_superset_of(ss.black.starting.rooks)),
         Case("starting pawns is proper superset of rank 7",
-             lambda _: ss.starting.pawns.is_proper_superset_of(ss.rank.r7)),
-        Case("white starting has subset white starting", lambda _: ss.white.starting.has_subset(ss.white.starting)),
+             lambda: ss.starting.pawns.is_proper_superset_of(ss.rank.r7)),
+        Case("white starting has subset white starting", lambda: ss.white.starting.all.has_subset(ss.white.starting.all)),
         Case("white starting does not have proper subset white starting",
-             lambda _: not ss.white.starting.has_proper_subset(ss.white.starting)),
-        Case("starting white has superset starting all", lambda _: ss.white.starting.has_superset(ss.starting.all))
+             lambda: not ss.white.starting.all.has_proper_subset(ss.white.starting.all)),
+        Case("starting white has superset starting all", lambda: ss.white.starting.all.has_superset(ss.starting.all))
     ]
 
     for name, sut in cases:
