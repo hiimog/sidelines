@@ -1,7 +1,9 @@
+import functools
 import re
 from typing import *
 from addict import Dict
 from bitarray import frozenbitarray, bitarray, util
+from functools import total_ordering
 
 ALGEBRAIC_REGEX = re.compile("^[a-h][1-8]$", re.I)
 WHITE = "white"
@@ -18,6 +20,7 @@ def int2ba(i):
     return util.int2ba(i, 64)
 
 
+@total_ordering
 class Square:
     def __init__(self, which: any = None):
         self._idx = 0
@@ -120,6 +123,9 @@ class Square:
     def __int__(self):
         return self.index
 
+    def __lt__(self, other):
+        return self.index < Square(other).index
+
     def __eq__(self, other):
         if other is None:
             return False
@@ -134,6 +140,12 @@ class Square:
 
     def __hash__(self):
         return self.index
+
+    def __bytes__(self):
+        return bytes(self.index)
+
+    def __hex__(self):
+        return hex(self.index)
 
 
 SQ = Square
@@ -158,10 +170,7 @@ class SquareSet:
         elif tipe in [frozenbitarray, bitarray]:
             self._value = frozenbitarray(initial)
         else:
-            try:
-                self._value = frozenbitarray(Square(initial).mask)
-            except:
-                raise ValueError("Unsupported constructor value")
+            self._value = frozenbitarray(Square(initial).mask)
 
     @property
     def value(self):
@@ -170,14 +179,6 @@ class SquareSet:
     @property
     def inverse(self):
         return SquareSet(~self.value)
-
-    @property
-    def as_bool(self):
-        return bool(self.value)
-
-    @property
-    def as_int(self):
-        return util.ba2int(self.value)
 
     def union(self, other: any):
         return SquareSet(self.value | SquareSet(other).value)
@@ -223,10 +224,14 @@ class SquareSet:
         return self.intersect(other)
 
     def __bool__(self):
-        return bool(self.value)
+        return self.value.any()
 
     def __bytes__(self):
-        return bytes(self.value)
+        return self.value.tobytes()
+
+    def __getitem__(self, item):
+        sq = Square(item)
+        return bool(self.value[sq.index])
 
     def __contains__(self, item):
         return self.is_superset_of(item)
@@ -234,14 +239,31 @@ class SquareSet:
     def __copy__(self):
         return SquareSet(self.value)
 
-    def __ge__(self, other):
-        return self.is_superset_of(other)
-
-    def __gt__(self, other):
-        return self.is_proper_superset_of(other)
-
     def __hex__(self):
         return util.ba2hex(self.value)
+
+    def __format__(self, format_spec):
+        if format_spec == "alg":
+            return self._comma_sep_alg()
+        raise ValueError(f"Unsupported format spec: \"{format_spec}\"")
+
+    def __lt__(self, other):
+        return self.is_proper_subset_of(SS(other))
+
+    def __le__(self, other):
+        return self.is_subset_of(SS(other))
+
+    def __eq__(self, other):
+        return self.value == SS(other).value
+
+    def __ge__(self, other):
+        return self.is_superset_of(SS(other))
+
+    def __gt__(self, other):
+        return self.is_proper_superset_of(SS(other))
+
+    def _comma_sep_alg(self):
+        return ",".join([sq.name for sq in self.squares()])
 
     def _init_from_str(self, initial: str):
         trimmed = [s.strip() for s in initial.split(",")]
@@ -253,6 +275,8 @@ class SquareSet:
             tipe = type(item)
             if tipe == SquareSet:
                 acc |= item.value
+            elif tipe in [frozenbitarray, bitarray]:
+                acc |= item
             elif tipe == Square:
                 acc |= item.mask
             elif tipe == int:
@@ -273,18 +297,6 @@ class SquareSet:
                 res.append(Square(i))
         return res
 
-    def __eq__(self, o: object) -> bool:
-        if o is None:
-            return False
-        try:
-            other = SS(o)
-            return self.value == other.value
-        except:
-            return False
-
-    def __ne__(self, o: object) -> bool:
-        return not self.__eq__(o)
-
     def __str__(self) -> str:
         res = []
         for i in range(64):
@@ -298,6 +310,34 @@ class SquareSet:
 
     def __hash__(self) -> int:
         return util.ba2int(self.value)
+
+    def __sub__(self, other):
+        return SS(self.value & ~SS(other).value)
+
+    def __int__(self):
+        return util.ba2int(self.value)
+
+    def __iter__(self):
+        for i, zeroOne in self.value:
+            if not zeroOne:
+                continue
+            yield Square(i)
+
+    def __len__(self):
+        return self.count
+
+    @property
+    def count(self):
+        return self.value.count(1)
+
+    def __neg__(self):
+        return SquareSet(~self.value)
+
+    def __invert__(self):
+        return SquareSet(~self.value)
+
+    def intersect(self, other):
+        return SS(self.value & SS(other).value)
 
 
 SS = SquareSet
@@ -350,6 +390,7 @@ s.white.castling.long.blockable = [sq for sq in s.all if sq.name in "d1, c1, b1"
 s.white.castling.long.checkable = [sq for sq in s.all if sq.name in "d1, c1"]
 s.white.castling.long.king = [SQ("c1")]
 s.white.castling.long.rook = [SQ("d1")]
+s.white.squares = [sq for sq in s.all if sq.white]
 
 s.black.starting.all = [sq for sq in s.all if sq.rank in [7, 8]]
 s.black.starting.king = SQ("e8")
@@ -367,6 +408,7 @@ s.black.castling.long.blockable = [sq for sq in s.all if sq.name in "d8, c8, b8"
 s.black.castling.long.checkable = [sq for sq in s.all if sq.name in "d8, c8"]
 s.black.castling.long.king = [SQ("c8")]
 s.black.castling.long.rook = [SQ("d8")]
+s.black.squares = [sq for sq in s.all if sq.black]
 
 ss = Dict(s)
 

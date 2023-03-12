@@ -234,7 +234,6 @@ def squareset_should_offer_basic_set_operations():
         assert sut() == want, name
 
 
-
 def squareset_should_offer_subset_methods():
     @dc.dataclass
     class Case:
@@ -248,12 +247,13 @@ def squareset_should_offer_subset_methods():
         Case("white starting pawns is subset of all white starting",
              lambda: ss.white.starting.pawns.is_subset_of(ss.white.starting.all)),
         Case("white starting pawns is proper subset of all white starting",
-             lambda: ss.white.starting.pawns.is_proper_subset_of(ss.white.starting .all)),
+             lambda: ss.white.starting.pawns.is_proper_subset_of(ss.white.starting.all)),
         Case("all black starting is superset of black rooks",
              lambda: ss.black.starting.all.is_superset_of(ss.black.starting.rooks)),
         Case("starting pawns is proper superset of rank 7",
              lambda: ss.starting.pawns.is_proper_superset_of(ss.rank.r7)),
-        Case("white starting has subset white starting", lambda: ss.white.starting.all.has_subset(ss.white.starting.all)),
+        Case("white starting has subset white starting",
+             lambda: ss.white.starting.all.has_subset(ss.white.starting.all)),
         Case("white starting does not have proper subset white starting",
              lambda: not ss.white.starting.all.has_proper_subset(ss.white.starting.all)),
         Case("starting white has superset starting all", lambda: ss.white.starting.all.has_superset(ss.starting.all))
@@ -267,14 +267,32 @@ def squareset_should_have_intuitive_operators():
     @dc.dataclass
     class Case:
         name: str
-        sut: Callable[[], SS]
-        want: SS
+        sut: Callable[[], any]
+        want: any
 
         def __iter__(self):
             return iter([self.name, self.sut, self.want])
 
+
     cases = [
         Case("+ performs union", lambda: ss.white.starting.all + ss.black.starting.all, ss.starting.all),
+        Case("- performs difference", lambda: ss.starting.all - ss.white.starting.all, ss.black.starting.all),
+        Case("in performs subset check 1", lambda: ss.white.starting.all in ss.white.starting.all, True),
+        Case("in performs subset check 2", lambda: ss.white.starting.all in ss.starting.all, True),
+        Case("in performs subset check 3", lambda: ss.white.starting.all in ss.black.starting.all, False),
+        Case("< performs proper subset check 1", lambda: ss.white.starting.all < ss.white.starting.all, False),
+        Case("< performs proper subset check 2", lambda: ss.white.starting.all < ss.starting.all, True),
+        Case("< performs proper subset check 3", lambda: ss.white.starting.all < ss.black.starting.all, False),
+        Case("<= performs subset check 1", lambda: ss.white.starting.all <= ss.white.starting.all, True),
+        Case("<= performs subset check 2", lambda: ss.white.starting.all <= ss.starting.all, True),
+        Case("<= performs subset check 3", lambda: ss.white.starting.all <= ss.black.starting.all, False),
+        Case("> performs proper superset check 1", lambda: ss.white.starting.all > ss.white.starting.all, False),
+        Case("> performs proper superset check 2", lambda: ss.starting.all > ss.white.starting.all, True),
+        Case("> performs proper superset check 3", lambda: ss.black.starting.all > ss.white.starting.all, False),
+        Case(">= performs superset check 1", lambda: ss.white.starting.all >= ss.white.starting.all, True),
+        Case(">= performs superset check 2", lambda: ss.starting.all >= ss.white.starting.all, True),
+        Case(">= performs superset check 3", lambda: ss.black.starting.all >= ss.white.starting.all, False),
+        Case("~ performs inverse", lambda: ~s.white.squares, s.black.squares),
     ]
 
     for name, sut, want in cases:

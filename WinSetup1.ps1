@@ -14,6 +14,7 @@ choco install `
 	git `
 	gnuwin32-coreutils.install `
 	googlechrome `
+	ipdb `
 	jetbrainstoolbox `
 	linqpad7.install `
 	microsoft-windows-terminal --pre `
