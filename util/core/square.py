@@ -6,18 +6,12 @@ from bitarray import frozenbitarray, bitarray, util
 from functools import total_ordering
 
 ALGEBRAIC_REGEX = re.compile("^[a-h][1-8]$", re.I)
-WHITE = "white"
 BLACK = "black"
 EITHER = "either"
+WHITE = "white"
+
+
 SideNames = Literal["white", "black", "either"]
-
-
-def int2fba(i):
-    return frozenbitarray(util.int2ba(i, 64))
-
-
-def int2ba(i):
-    return util.int2ba(i, 64)
 
 
 @total_ordering
@@ -49,9 +43,6 @@ class Square:
             self._idx = which.index
         else:
             raise ValueError("Unsupported constructor value")
-
-    def _is_valid(self):
-        return 0 <= self.index <= 63
 
     @property
     def index(self):
@@ -114,17 +105,11 @@ class Square:
             return self.row == 0 or self.row == 7
         raise ValueError("sides must be white, black, or either")
 
-    def __str__(self):
-        return self.name
+    def _is_valid(self):
+        return 0 <= self.index <= 63
 
-    def __repr__(self):
-        return f"Square({self.name})"
-
-    def __int__(self):
-        return self.index
-
-    def __lt__(self, other):
-        return self.index < Square(other).index
+    def __bytes__(self):
+        return bytes(self.index)
 
     def __eq__(self, other):
         if other is None:
@@ -141,11 +126,20 @@ class Square:
     def __hash__(self):
         return self.index
 
-    def __bytes__(self):
-        return bytes(self.index)
-
     def __hex__(self):
         return hex(self.index)
+
+    def __int__(self):
+        return self.index
+
+    def __lt__(self, other):
+        return self.index < Square(other).index
+
+    def __repr__(self):
+        return f"Square({self.name})"
+
+    def __str__(self):
+        return self.name
 
 
 SQ = Square
@@ -161,7 +155,7 @@ class SquareSet:
             self._value = initial.value
         elif tipe == int:
             self._value = int2fba(initial)
-        elif tipe == list:
+        elif tipe in [tuple, list, set]:
             self._init_from_list(initial)
         elif tipe == str:
             self._init_from_str(initial)
@@ -217,57 +211,24 @@ class SquareSet:
     def has_proper_superset(self, other: any):
         return self.has_superset(other) and self.value != SquareSet(other).value
 
-    def __add__(self, other):
-        return self.union(other)
+    def squares(self, selector: Optional[Callable[[Square], bool]] = None) -> List[Square]:
+        if not selector:
+            def selector(_):
+                return True
+        res = []
+        for i in range(64):
+            ba = util.int2ba(0, 64)
+            ba.invert(i)
+            if bool(ba & self.value) and selector(Square(i)):
+                res.append(Square(i))
+        return res
 
-    def __and__(self, other):
-        return self.intersect(other)
-
-    def __bool__(self):
-        return self.value.any()
-
-    def __bytes__(self):
-        return self.value.tobytes()
-
-    def __getitem__(self, item):
-        sq = Square(item)
-        return bool(self.value[sq.index])
-
-    def __contains__(self, item):
-        return self.is_superset_of(item)
-
-    def __copy__(self):
-        return SquareSet(self.value)
-
-    def __hex__(self):
-        return util.ba2hex(self.value)
-
-    def __format__(self, format_spec):
-        if format_spec == "alg":
-            return self._comma_sep_alg()
-        raise ValueError(f"Unsupported format spec: \"{format_spec}\"")
-
-    def __lt__(self, other):
-        return self.is_proper_subset_of(SS(other))
-
-    def __le__(self, other):
-        return self.is_subset_of(SS(other))
-
-    def __eq__(self, other):
-        return self.value == SS(other).value
-
-    def __ge__(self, other):
-        return self.is_superset_of(SS(other))
-
-    def __gt__(self, other):
-        return self.is_proper_superset_of(SS(other))
+    @property
+    def count(self):
+        return self.value.count(1)
 
     def _comma_sep_alg(self):
         return ",".join([sq.name for sq in self.squares()])
-
-    def _init_from_str(self, initial: str):
-        trimmed = [s.strip() for s in initial.split(",")]
-        self._init_from_list(trimmed)
 
     def _init_from_list(self, initial: list) -> None:
         acc = util.int2ba(0, 64)
@@ -288,14 +249,78 @@ class SquareSet:
                     raise ValueError(f"item {i}: \"{item}\" can not be part of a SquareSet")
         self._value = frozenbitarray(acc)
 
-    def squares(self) -> List[Square]:
-        res = []
-        for i in range(64):
-            ba = util.int2ba(0, 64)
-            ba.invert(i)
-            if bool(ba & self.value):
-                res.append(Square(i))
-        return res
+    def _init_from_str(self, initial: str):
+        trimmed = [s.strip() for s in initial.split(",")]
+        self._init_from_list(trimmed)
+
+    def __add__(self, other):
+        return self.union(other)
+
+    def __and__(self, other):
+        return self.intersect(other)
+
+    def __bool__(self):
+        return self.value.any()
+
+    def __bytes__(self):
+        return self.value.tobytes()
+
+    def __contains__(self, item):
+        return self.is_superset_of(item)
+
+    def __copy__(self):
+        return SquareSet(self.value)
+
+    def __eq__(self, other):
+        return self.value == SS(other).value
+
+    def __format__(self, format_spec):
+        if format_spec == "alg":
+            return self._comma_sep_alg()
+        raise ValueError(f"Unsupported format spec: \"{format_spec}\"")
+
+    def __ge__(self, other):
+        return self.is_superset_of(SS(other))
+
+    def __getitem__(self, item):
+        sq = Square(item)
+        return bool(self.value[sq.index])
+
+    def __gt__(self, other):
+        return self.is_proper_superset_of(SS(other))
+
+    def __hash__(self) -> int:
+        return util.ba2int(self.value)
+
+    def __hex__(self):
+        return util.ba2hex(self.value)
+
+    def __int__(self):
+        return util.ba2int(self.value)
+
+    def __invert__(self):
+        return SquareSet(~self.value)
+
+    def __iter__(self):
+        for i, zeroOne in self.value:
+            if not zeroOne:
+                continue
+            yield Square(i)
+
+    def __le__(self, other):
+        return self.is_subset_of(SS(other))
+
+    def __len__(self):
+        return self.count
+
+    def __lt__(self, other):
+        return self.is_proper_subset_of(SS(other))
+
+    def __neg__(self):
+        return SquareSet(~self.value)
+
+    def __repr__(self) -> str:
+        return self.__str__()
 
     def __str__(self) -> str:
         res = []
@@ -305,120 +330,100 @@ class SquareSet:
             res.append(Square(i).name)
         return "SS(" + ",".join(res) + ")"
 
-    def __repr__(self) -> str:
-        return self.__str__()
-
-    def __hash__(self) -> int:
-        return util.ba2int(self.value)
-
     def __sub__(self, other):
         return SS(self.value & ~SS(other).value)
 
-    def __int__(self):
-        return util.ba2int(self.value)
 
-    def __iter__(self):
-        for i, zeroOne in self.value:
-            if not zeroOne:
-                continue
-            yield Square(i)
-
-    def __len__(self):
-        return self.count
-
-    @property
-    def count(self):
-        return self.value.count(1)
-
-    def __neg__(self):
-        return SquareSet(~self.value)
-
-    def __invert__(self):
-        return SquareSet(~self.value)
-
-    def intersect(self, other):
-        return SS(self.value & SS(other).value)
 
 
 SS = SquareSet
 
 s = Dict()
 
-s.all = [Square(i) for i in range(64)]
-s.none = []
-s.empty = []
+s.all = tuple([Square(i) for i in range(64)])
+s.none = tuple([])
+s.empty = tuple([])
 
-s.starting.all = [sq for sq in s.all if sq.rank in [1, 2, 7, 8]]
-s.starting.pawns = [sq for sq in s.all if sq.rank in [2, 7]]
-s.starting.knights = [sq for sq in s.all if sq.name in "b1,g1,b8,g8"]
-s.starting.bishops = [sq for sq in s.all if sq.name in "c1,f1,c8,f8"]
-s.starting.rooks = [sq for sq in s.all if sq.name in "a1,h1,a8,h8"]
-s.starting.queens = [SQ("d1"), SQ("d8")]
-s.starting.kings = [SQ("e1"), SQ("e8")]
+s.starting.all = tuple([sq for sq in s.all if sq.rank in [1, 2, 7, 8]])
+s.starting.pawns = tuple([sq for sq in s.all if sq.rank in [2, 7]])
+s.starting.knights = tuple([sq for sq in s.all if sq.name in "b1,g1,b8,g8"])
+s.starting.bishops = tuple([sq for sq in s.all if sq.name in "c1,f1,c8,f8"])
+s.starting.rooks = tuple([sq for sq in s.all if sq.name in "a1,h1,a8,h8"])
+s.starting.queens = tuple([SQ("d1"), SQ("d8")])
+s.starting.kings = tuple([SQ("e1"), SQ("e8")])
 
-s.rank.r1 = [sq for sq in s.all if s.rank == 1]
-s.rank.r2 = [sq for sq in s.all if s.rank == 2]
-s.rank.r3 = [sq for sq in s.all if s.rank == 3]
-s.rank.r4 = [sq for sq in s.all if s.rank == 4]
-s.rank.r5 = [sq for sq in s.all if s.rank == 5]
-s.rank.r6 = [sq for sq in s.all if s.rank == 6]
-s.rank.r7 = [sq for sq in s.all if s.rank == 7]
-s.rank.r8 = [sq for sq in s.all if s.rank == 8]
+s.rank.r1 = tuple([sq for sq in s.all if s.rank == 1])
+s.rank.r2 = tuple([sq for sq in s.all if s.rank == 2])
+s.rank.r3 = tuple([sq for sq in s.all if s.rank == 3])
+s.rank.r4 = tuple([sq for sq in s.all if s.rank == 4])
+s.rank.r5 = tuple([sq for sq in s.all if s.rank == 5])
+s.rank.r6 = tuple([sq for sq in s.all if s.rank == 6])
+s.rank.r7 = tuple([sq for sq in s.all if s.rank == 7])
+s.rank.r8 = tuple([sq for sq in s.all if s.rank == 8])
 
-s.file.a = [sq for sq in s.all if sq.file == "a"]
-s.file.b = [sq for sq in s.all if sq.file == "b"]
-s.file.c = [sq for sq in s.all if sq.file == "c"]
-s.file.d = [sq for sq in s.all if sq.file == "d"]
-s.file.e = [sq for sq in s.all if sq.file == "e"]
-s.file.f = [sq for sq in s.all if sq.file == "f"]
-s.file.g = [sq for sq in s.all if sq.file == "g"]
-s.file.h = [sq for sq in s.all if sq.file == "h"]
+s.file.a = tuple([sq for sq in s.all if sq.file == "a"])
+s.file.b = tuple([sq for sq in s.all if sq.file == "b"])
+s.file.c = tuple([sq for sq in s.all if sq.file == "c"])
+s.file.d = tuple([sq for sq in s.all if sq.file == "d"])
+s.file.e = tuple([sq for sq in s.all if sq.file == "e"])
+s.file.f = tuple([sq for sq in s.all if sq.file == "f"])
+s.file.g = tuple([sq for sq in s.all if sq.file == "g"])
+s.file.h = tuple([sq for sq in s.all if sq.file == "h"])
 
-s.white.starting.all = [sq for sq in s.all if sq.rank in [1, 2]]
+s.white.starting.all = tuple([sq for sq in s.all if sq.rank in [1, 2]])
 s.white.starting.king = SQ("e1")
 s.white.starting.queen = SQ("d1")
-s.white.starting.bishops = [SQ("c1"), SQ("f1")]
-s.white.starting.knights = [SQ("b1"), SQ("g1")]
-s.white.starting.rooks = [SQ("a1"), SQ("h1")]
-s.white.starting.pawns = [sq for sq in s.all if sq.rank == 2]
-s.white.promotion = [sq for sq in s.all if sq.rank == 8]
-s.white.castling.short.blockable = [sq for sq in s.all if sq.name in "f1,g1"]
-s.white.castling.short.checkable = [sq for sq in s.all if sq.name in "f1,g1"]
-s.white.castling.short.king = [SQ("g1")]
-s.white.castling.short.rook = [SQ("f1")]
-s.white.castling.long.blockable = [sq for sq in s.all if sq.name in "d1, c1, b1"]
-s.white.castling.long.checkable = [sq for sq in s.all if sq.name in "d1, c1"]
-s.white.castling.long.king = [SQ("c1")]
-s.white.castling.long.rook = [SQ("d1")]
-s.white.squares = [sq for sq in s.all if sq.white]
+s.white.starting.bishops = tuple([SQ("c1"), SQ("f1")])
+s.white.starting.knights = tuple([SQ("b1"), SQ("g1")])
+s.white.starting.rooks = tuple([SQ("a1"), SQ("h1")])
+s.white.starting.pawns = tuple([sq for sq in s.all if sq.rank == 2])
+s.white.promotion = tuple([sq for sq in s.all if sq.rank == 8])
+s.white.castling.short.blockable = tuple([sq for sq in s.all if sq.name in "f1,g1"])
+s.white.castling.short.checkable = tuple([sq for sq in s.all if sq.name in "f1,g1"])
+s.white.castling.short.king = tuple([SQ("g1")])
+s.white.castling.short.rook = tuple([SQ("f1")])
+s.white.castling.long.blockable = tuple([sq for sq in s.all if sq.name in "d1, c1, b1"])
+s.white.castling.long.checkable = tuple([sq for sq in s.all if sq.name in "d1, c1"])
+s.white.castling.long.king = tuple([SQ("c1")])
+s.white.castling.long.rook = tuple([SQ("d1")])
+s.white.squares = tuple([sq for sq in s.all if sq.white])
 
-s.black.starting.all = [sq for sq in s.all if sq.rank in [7, 8]]
+s.black.starting.all = tuple([sq for sq in s.all if sq.rank in [7, 8]])
 s.black.starting.king = SQ("e8")
 s.black.starting.queen = SQ("d8")
-s.black.starting.bishops = [SQ("c8"), SQ("f8")]
-s.black.starting.knights = [SQ("b8"), SQ("g8")]
-s.black.starting.rooks = [SQ("a8"), SQ("h8")]
-s.black.starting.pawns = [sq for sq in s.all if sq.rank == 2]
-s.black.promotion = [sq for sq in s.all if sq.rank == 8]
-s.black.castling.short.blockable = [sq for sq in s.all if sq.name in "f8,g8"]
-s.black.castling.short.checkable = [sq for sq in s.all if sq.name in "f8,g8"]
-s.black.castling.short.king = [SQ("g8")]
-s.black.castling.short.rook = [SQ("f8")]
-s.black.castling.long.blockable = [sq for sq in s.all if sq.name in "d8, c8, b8"]
-s.black.castling.long.checkable = [sq for sq in s.all if sq.name in "d8, c8"]
-s.black.castling.long.king = [SQ("c8")]
-s.black.castling.long.rook = [SQ("d8")]
-s.black.squares = [sq for sq in s.all if sq.black]
+s.black.starting.bishops = tuple([SQ("c8"), SQ("f8")])
+s.black.starting.knights = tuple([SQ("b8"), SQ("g8")])
+s.black.starting.rooks = tuple([SQ("a8"), SQ("h8")])
+s.black.starting.pawns = tuple([sq for sq in s.all if sq.rank == 2])
+s.black.promotion = tuple([sq for sq in s.all if sq.rank == 8])
+s.black.castling.short.blockable = tuple([sq for sq in s.all if sq.name in "f8,g8"])
+s.black.castling.short.checkable = tuple([sq for sq in s.all if sq.name in "f8,g8"])
+s.black.castling.short.king = tuple([SQ("g8")])
+s.black.castling.short.rook = tuple([SQ("f8")])
+s.black.castling.long.blockable = tuple([sq for sq in s.all if sq.name in "d8, c8, b8"])
+s.black.castling.long.checkable = tuple([sq for sq in s.all if sq.name in "d8, c8"])
+s.black.castling.long.king = tuple([SQ("c8")])
+s.black.castling.long.rook = tuple([SQ("d8")])
+s.black.squares = tuple([sq for sq in s.all if sq.black])
 
 ss = Dict(s)
 
 
 def _make_squaresets(root: Dict):
     for key, val in root.items():
-        if type(val) in [SQ, list]:
+        if type(val) in [SQ, tuple]:
             root[key] = SS(val)
         if type(val) == Dict:
             _make_squaresets(val)
 
 
+def int2fba(i):
+    return frozenbitarray(util.int2ba(i, 64))
+
+
+def int2ba(i):
+    return util.int2ba(i, 64)
+
+
+# turn squares or list[square] from s into SquareSets
 _make_squaresets(ss)

@@ -292,7 +292,7 @@ def squareset_should_have_intuitive_operators():
         Case(">= performs superset check 1", lambda: ss.white.starting.all >= ss.white.starting.all, True),
         Case(">= performs superset check 2", lambda: ss.starting.all >= ss.white.starting.all, True),
         Case(">= performs superset check 3", lambda: ss.black.starting.all >= ss.white.starting.all, False),
-        Case("~ performs inverse", lambda: ~s.white.squares, s.black.squares),
+        Case("~ performs inverse", lambda: ~ss.white.squares, ss.black.squares),
     ]
 
     for name, sut, want in cases:
