@@ -80,11 +80,14 @@ def square_should_expose_accurate_convenience_properties():
 
     cases = [
         Case("0 - a1 - 0,0 - black", SQ(c.A1),
-             Props("a1", c.A1, 0, 0, 1, "a", False, True, int2ba(2 ** c.A1), util.int2ba(2 ** c.A1, 64).to01())),
+             Props("a1", c.A1, 0, 0, 1, "a", False, True, int2fba(2 ** c.A1),
+                   util.int2ba(2 ** c.A1, 64).to01())),
         Case("8 - a2 - 1,0 - white", SQ(c.A2),
-             Props("a2", c.A2, 1, 0, 2, "a", True, False, int2ba(2 ** c.A2), util.int2ba(2 ** c.A2, 64).to01())),
+             Props("a2", c.A2, 1, 0, 2, "a", True, False, int2fba(2 ** c.A2),
+                   util.int2ba(2 ** c.A2, 64).to01())),
         Case("63 - h8 - 7,8 - black", SQ(c.H8),
-             Props("h8", c.H8, 7, 7, 8, "h", False, True, int2ba(2 ** c.H8), util.int2ba(2 ** c.H8, 64).to01())),
+             Props("h8", c.H8, 7, 7, 8, "h", False, True, int2fba(2 ** c.H8),
+                   util.int2ba(2 ** c.H8, 64).to01())),
     ]
 
     for name, square, want in cases:
@@ -176,10 +179,10 @@ def squareset_should_be_constructible():
 
     for name, value, want in cases:
         try:
-            ss = SS(value)
+            sut = SS(value)
         except:
             pytest.fail(f"SquareSet construction failed for case \"{name}\"")
-        assert ss.value == want, name
+        assert sut.value == want, name
 
 
 def squareset_should_enumerate_squares():
@@ -273,7 +276,6 @@ def squareset_should_have_intuitive_operators():
         def __iter__(self):
             return iter([self.name, self.sut, self.want])
 
-
     cases = [
         Case("+ performs union", lambda: ss.white.starting.all + ss.black.starting.all, ss.starting.all),
         Case("- performs difference", lambda: ss.starting.all - ss.white.starting.all, ss.black.starting.all),
@@ -297,3 +299,44 @@ def squareset_should_have_intuitive_operators():
 
     for name, sut, want in cases:
         assert sut() == want, name
+
+
+def squareset_should_be_iterable():
+    @dc.dataclass
+    class Case:
+        name: str
+        sut: SquareSet
+        want: List[Square]
+
+        def __iter__(self):
+            return iter([self.name, self.sut, self.want])
+
+    cases = [
+        Case("empty squareset", ss.empty, []),
+        Case("single square", SquareSet("a1"), [SQ("a1")]),
+        Case("rank 1", ss.rank.r1, [s.all[i] for i in range(8)]),
+        Case("all squares", ss.all, list(s.all)),
+    ]
+
+    for name, sut, want in cases:
+        assert list(sut) == want, name
+
+
+def squareset_should_have_a_usable_str_result():
+    @dc.dataclass
+    class Case:
+        name: str
+        sut: SquareSet
+        want: str
+
+        def __iter__(self):
+            return iter([self.name, self.sut, self.want])
+
+    cases = [
+        Case("empty", ss.empty, "SS()"),
+        Case("a1", SS("a1"), "SS(a1)"),
+        Case("rank 2", ss.rank.r2, "SS(a2,b2,c2,d2,e2,f2,g2,h2)")
+    ]
+
+    for name, sut, want in cases:
+        assert str(sut) == want, name
