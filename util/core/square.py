@@ -143,10 +143,11 @@ class Square:
 
 SQ = Square
 
-SquareSetConstructorType = Union[Self, int, List, ]
+SquareSetConstructorType = Union[Self, int, List, str, Square]
+
 
 class SquareSet:
-    def __init__(self, initial: any = None):
+    def __init__(self, initial: Optional[SquareSetConstructorType] = None):
         self._value = 0
         if initial is None:
             return
@@ -163,6 +164,8 @@ class SquareSet:
             self._value = initial.mask
         else:
             self._value = Square(initial).mask
+        if self._value < 0:
+            self._value += 2**64
 
     @property
     def value(self):
@@ -172,38 +175,49 @@ class SquareSet:
     def inverse(self):
         return SquareSet(~self.value)
 
-    def union(self, other: "SquareSet") -> "SquareSet":
+    def union(self, other: any) -> Self:
+        other = SS(other)
         return SquareSet(self.value | other.value)
 
-    def intersect(self, other: "SquareSet") -> "SquareSet":
+    def intersect(self, other: any) -> Self:
+        other = SS(other)
         return SquareSet(self.value & other.value)
 
-    def difference(self, other: "SquareSet") -> "SquareSet":
+    def difference(self, other: any) -> Self:
+        other = SS(other)
         return SquareSet(self.value & ~other.value)
 
-    def is_subset_of(self, other: "SquareSet"):
+    def is_subset_of(self, other: any):
+        other = SS(other)
         return self.value == (self.value & other.value)
 
-    def has_subset(self, other: "SquareSet"):
+    def has_subset(self, other: any):
+        other = SS(other)
         return other.value == (self.value & other.value)
 
-    def is_proper_subset_of(self, other: "SquareSet"):
-        return self.is_subset_of(other) and self.value != other.value
+    def is_proper_subset_of(self, other: any):
+        other = SS(other)
+        return self.is_subset_of(other.value) and self.value != other.value
 
-    def has_proper_subset(self, other: "SquareSet"):
-        return self.value == (other & self.value) and self.value != other
+    def has_proper_subset(self, other: any):
+        other = SS(other)
+        return self.value == (other.value & self.value) and self.value != other.value
 
-    def is_superset_of(self, other: Self):
+    def is_superset_of(self, other: any):
+        other = SS(other)
         return other.value == (other.value & self.value)
 
-    def has_superset(self, other: Self):
+    def has_superset(self, other: any):
+        other = SS(other)
         return self.value == other.value & self.value
 
-    def is_proper_superset_of(self, other: Self):
-        return self.is_superset_of(other) and self.value != other.value
+    def is_proper_superset_of(self, other: any):
+        other = SS(other)
+        return self.is_superset_of(other.value) and self.value != other.value
 
-    def has_proper_superset(self, other: Self):
-        return self.has_superset(other) and self.value !=other.value
+    def has_proper_superset(self, other: any):
+        other = SS(other)
+        return self.has_superset(other.value) and self.value != other.value
 
     def squares(self) -> List[Square]:
         return list(self)
@@ -236,11 +250,11 @@ class SquareSet:
         trimmed = [sq.strip() for sq in initial.split(",")]
         self._init_from_list(trimmed)
 
-    def __add__(self, other):
-        return self.union(other)
+    def __add__(self, other: any) -> Self:
+        return self.union(SS(other))
 
-    def __and__(self, other):
-        return self.intersect(other)
+    def __and__(self, other: any) -> Self:
+        return self.intersect(SS(other))
 
     def __bool__(self):
         return bool(self.value)
@@ -249,13 +263,13 @@ class SquareSet:
         return bytes(self.value)
 
     def __contains__(self, item):
-        return self.is_superset_of(item)
+        return self.is_superset_of(SS(item))
 
     def __copy__(self):
         return SquareSet(self.value)
 
-    def __eq__(self, other):
-        return self.value == other.value
+    def __eq__(self, other: any):
+        return self.value == SS(other).value
 
     def __format__(self, format_spec):
         if format_spec == "alg":
@@ -265,8 +279,8 @@ class SquareSet:
     def __ge__(self, other):
         return self.is_superset_of(SS(other))
 
-    def __getitem__(self, item):
-        sq = Square(item)
+    def __getitem__(self, item: any):
+        sq = SQ(item)
         return bool(self.value & sq.mask)
 
     def __gt__(self, other):
@@ -289,20 +303,20 @@ class SquareSet:
             if self.value & (1 << i):
                 yield Square(i)
 
-    def __le__(self, other):
+    def __le__(self, other: any):
         return self.is_subset_of(SS(other))
 
     def __len__(self):
         return self.count
 
-    def __lt__(self, other):
+    def __lt__(self, other: any):
         return self.is_proper_subset_of(SS(other))
 
     def __neg__(self):
         return SquareSet(~self.value)
 
-    def __ne__(self, other):
-        return self.value != other.value
+    def __ne__(self, other: any):
+        return self.value != SS(other).value
 
     def __repr__(self) -> str:
         return self.__str__()
