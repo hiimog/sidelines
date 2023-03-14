@@ -238,7 +238,10 @@ def squareset_should_offer_subset_methods():
              lambda: ss.white.starting.all.has_subset(ss.white.starting.all)),
         Case("white starting does not have proper subset white starting",
              lambda: not ss.white.starting.all.has_proper_subset(ss.white.starting.all)),
-        Case("starting white has superset starting all", lambda: ss.white.starting.all.has_superset(ss.starting.all))
+        Case("starting white has superset starting all", lambda: ss.white.starting.all.has_superset(ss.starting.all)),
+        Case("starting black has proper subset rank 7", lambda: ss.black.starting.all.has_proper_subset(ss.rank.r7)),
+        Case("a1,a2 has superset a file", lambda: SS("a1,a2").has_superset(ss.file.a)),
+        Case("a1,a2 has proper superset a file", lambda: SS("a1,a2").has_proper_superset(ss.file.a))
     ]
 
     for name, sut in cases:
@@ -257,6 +260,7 @@ def squareset_should_have_intuitive_operators():
 
     cases = [
         Case("+ performs union", lambda: ss.white.starting.all + ss.black.starting.all, ss.starting.all),
+        Case("& performs intersection", lambda: ss.rank.r1 & ss.file.a, SS("a1")),
         Case("- performs difference", lambda: ss.starting.all - ss.white.starting.all, ss.black.starting.all),
         Case("in performs subset check 1", lambda: ss.white.starting.all in ss.white.starting.all, True),
         Case("in performs subset check 2", lambda: ss.white.starting.all in ss.starting.all, True),
@@ -274,6 +278,10 @@ def squareset_should_have_intuitive_operators():
         Case(">= performs superset check 2", lambda: ss.starting.all >= ss.white.starting.all, True),
         Case(">= performs superset check 3", lambda: ss.black.starting.all >= ss.white.starting.all, False),
         Case("~ performs inverse", lambda: ~ss.white.squares, ss.black.squares),
+        Case("- performs inverse", lambda: -ss.white.squares, ss.black.squares),
+        Case("!= performs equality check", lambda: ss.white.squares != ss.black.squares, True),
+        Case("[] performs membership check for squares", lambda: ss.white.squares[SQ("h1")], True),
+        Case("len performs bit count", lambda: len(ss.file.e), 8)
     ]
 
     for name, sut, want in cases:
@@ -319,3 +327,33 @@ def squareset_should_have_a_usable_str_result():
 
     for name, sut, want in cases:
         assert str(sut) == want, name
+
+
+def squareset_should_have_format_strings():
+    @dc.dataclass
+    class Case:
+        name: str
+        sut: SquareSet
+        format: str
+        want: str
+
+        def __iter__(self):
+            return iter([self.name, self.sut, self.format, self.want])
+
+    cases = [
+        Case("alg produces comma separated list", ss.rank.r1, "alg", "a1,b1,c1,d1,e1,f1,g1,h1"),
+        Case("b produces binary rep", ss.rank.r1, "b", ("0" * 56) + ("1" * 8)),
+    ]
+
+    for name, sut, frm, want in cases:
+        assert ("{0:" + frm + "}").format(sut) == want, name
+
+
+def squareset_can_be_used_as_dict_key():
+    try:
+        d = dict()
+        d[ss.none] = 1
+        assert d[SS(0)] == 1, "any equivalent squareset should work"
+        assert SS(0) in d, "should work as contains"
+    except:
+        pytest.fail("SquareSet should be usable as a key in dictionary")

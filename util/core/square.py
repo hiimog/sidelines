@@ -13,6 +13,7 @@ SideNames = Literal["white", "black", "either"]
 
 SquareConstructorType = Union[int, str, Tuple[int, int], Self]
 
+
 @total_ordering
 class Square:
     def __init__(self, which: SquareConstructorType = None):
@@ -165,7 +166,7 @@ class SquareSet:
         else:
             self._value = Square(initial).mask
         if self._value < 0:
-            self._value += 2**64
+            self._value += 2 ** 64
 
     @property
     def value(self):
@@ -174,6 +175,14 @@ class SquareSet:
     @property
     def inverse(self):
         return SquareSet(~self.value)
+
+    @property
+    def bits(self):
+        return f"{self.value:064b}"
+
+    @property
+    def count(self):
+        return self.value.bit_count()
 
     def union(self, other: any) -> Self:
         other = SS(other)
@@ -201,7 +210,7 @@ class SquareSet:
 
     def has_proper_subset(self, other: any):
         other = SS(other)
-        return self.value == (other.value & self.value) and self.value != other.value
+        return self.has_subset(other) and self.value != other.value
 
     def is_superset_of(self, other: any):
         other = SS(other)
@@ -209,7 +218,7 @@ class SquareSet:
 
     def has_superset(self, other: any):
         other = SS(other)
-        return self.value == other.value & self.value
+        return self.value == (other.value & self.value)
 
     def is_proper_superset_of(self, other: any):
         other = SS(other)
@@ -217,14 +226,10 @@ class SquareSet:
 
     def has_proper_superset(self, other: any):
         other = SS(other)
-        return self.has_superset(other.value) and self.value != other.value
+        return self.has_superset(other) and (self.value != other.value)
 
     def squares(self) -> List[Square]:
         return list(self)
-
-    @property
-    def count(self):
-        return self.value.bit_count()
 
     def _comma_sep_alg(self):
         return ",".join([sq.name for sq in self.squares()])
@@ -274,7 +279,9 @@ class SquareSet:
     def __format__(self, format_spec):
         if format_spec == "alg":
             return self._comma_sep_alg()
-        raise ValueError(f"Unsupported format spec: \"{format_spec}\"")
+        if format_spec == "b":
+            return self.bits
+        return self.value.__format__(format_spec)
 
     def __ge__(self, other):
         return self.is_superset_of(SS(other))
