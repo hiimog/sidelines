@@ -9,7 +9,7 @@ pip install `
     seqlog
 
 #needs admin
-pip install --editable C:\src\sidelines\util
+pip install --editable C:\src\sidelines\cli
 mkdir C:\Users\User\AppData\Local\nvim
 
 # link win dev profile to location

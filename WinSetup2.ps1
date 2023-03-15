@@ -9,10 +9,6 @@ cargo install tauri-cli
 
 mkdir C:\src
 mkdir C:\tools
-Set-Location C:\tools
-git clone https://github.com/Microsoft/vcpkg.git C:\tools\vcpkg
-Invoke-Expression c:\tools\vcpkg\bootstrap-vcpkg.bat
-[System.Environment]::SetEnvironmentVariable('Path', "${env:Path};c:\tools\vcpkg", 'User')
 
 read-host "Start installation of Clion"
 

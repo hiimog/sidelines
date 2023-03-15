@@ -9,6 +9,7 @@ choco install `
 	7zip `
 	bat `
 	cmake `
+	conan.install `
 	curl `
 	delta `
 	git `
