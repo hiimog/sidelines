@@ -1,0 +1,18 @@
+{
+  "name" : "eng",
+  "version-string" : "1.0.0",
+  "builtin-baseline" : "cfdeb75bb67fee475b517a2f45d8f93f2b46bdb4",
+  "dependencies" : [ {
+    "name" : "sqlite3",
+    "version>=" : "3.40.1#1"
+  }, {
+    "name" : "nlohmann-json",
+    "version>=" : "3.11.2"
+  }, {
+    "name" : "spdlog",
+    "version>=" : "1.11.0"
+  }, {
+    "name" : "fmt",
+    "version>=" : "9.1.0#1"
+  } ]
+}
