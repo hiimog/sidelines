@@ -12,6 +12,7 @@ choco install `
 	conan.install `
 	curl `
 	delta `
+	everything `
 	git `
 	gnuwin32-coreutils.install `
 	googlechrome `
