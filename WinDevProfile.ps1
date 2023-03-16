@@ -1,5 +1,5 @@
-function gocli {
-    Set-Location C:\src\sidelines\cli
+function goeng {
+    Set-Location C:\src\sidelines\eng
 }
 
 function goutil {
