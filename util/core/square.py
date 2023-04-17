@@ -1,5 +1,6 @@
 import functools
 import re
+from types import SimpleNamespace
 from typing import *
 from addict import Dict
 from functools import total_ordering
@@ -333,6 +334,59 @@ class SquareSet:
 
     def __sub__(self, other):
         return SS(self.value & ~SS(other).value)
+
+def ranks(*args) -> Tuple[Square]:
+    res = []
+    for i in args:
+        for j in range(8 * (i - 1), 8 * i):
+            res.append(SQ(j))
+    return tuple(res)
+
+def files(s: str) -> Tuple[Square]:
+    res = []
+    for c in s:
+        idx = "abcdefgh".index(c)
+        for j in range(idx, 64, 8):
+            res.append(SQ(j))
+
+
+class sqs:
+    class starting:
+        all = ranks(range(1,9))
+        white = ranks(1, 2)
+        black = ranks(7, 8)
+        pawns = ranks(2, 7)
+        knights = tuple((SQ(s) for s in ["b1", "g1", "b8", "g8"]))
+        bishops = tuple((SQ(s) for s in ["c1", "f1", "c8", "f8"]))
+        rooks = tuple((SQ(s) for s in ["a1", "h1", "a8", "h8"]))
+        queens = tuple((SQ(s) for s in ["d1", "d8"]))
+        kings = tuple((SQ(s) for s in ["e1", "e8"]))
+
+    class ranks:
+        all = tuple(ranks(i) for i in range(1, 9))
+        r1 = ranks(1)
+        r2 = ranks(2)
+        r3 = ranks(3)
+        r4 = ranks(4)
+        r5 = ranks(5)
+        r6 = ranks(6)
+        r7 = ranks(7)
+        r8 = ranks(8)
+
+    class files:
+        all = tuple(files(i) for i in "abcdefgh")
+        a = files("a")
+        b = files("b")
+        c = files("c")
+        d = files("d")
+        e = files("e")
+        f = files("f")
+        g = files("g")
+        h = files("h")
+
+    all = tuple(SQ(i) for i in range(64))
+    none = tuple()
+    empty = tuple()
 
 
 SS = SquareSet
