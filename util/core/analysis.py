@@ -1,17 +1,17 @@
 from typing import *
+from functools import reduce
 
 
 class MoveAnalysis:
+    next_analysis_id: int = 0
+
     def __init__(self, name: str, desc: str, is_pseudo: bool = True):
-        self.val = 0  # to be set by auto assign process
+        self.id = MoveAnalysis.next_analysis_id
+        MoveAnalysis.next_analysis_id += 1
+        self.mask = 1 << self.id
         self.name = name
         self.desc = desc
-        self._children: List[MoveAnalysis] = []
-        self._parent: MoveAnalysis | None = None
-
-    def add_child(self, child: "MoveAnalysis"):
-        self._children.append(child)
-        child._parent = self
+        self.is_pseudo = is_pseudo
 
 
 class MoveAnalysisGroup:
@@ -21,6 +21,7 @@ class MoveAnalysisGroup:
         self.name = name
         self.desc = desc
         self.analyses = analyses
+        self.mask = reduce(lambda a, b: a | b.mask, analyses, 0)
 
 
 pawn_capture = MoveAnalysis("PawnCapture", "Move captures an enemy pawn")
@@ -124,6 +125,7 @@ illegal_castle_group = MoveAnalysisGroup("IllegalCastleGroup", "Analyses for ill
     illegal_castle_through_check
 ])
 
+
 """
 capture pnbrqk x (by, of)
 pawn move:
@@ -159,14 +161,65 @@ pawn considerations:
 
 
 class PositionAnalysis:
-    def __init__(self, name: str, desc: str):
-        pass
+    next_id: int = 0
 
+    def __init__(self, name: str, desc: str, is_pseudo: bool = True):
+        self.id = PositionAnalysis.next_id
+        PositionAnalysis.next_id += 1
+        self.mask = 1 << self.id
+        self.name = name
+        self.desc = desc
+        self.is_pseudo = is_pseudo
+
+
+class PositionAnalysisGroup:
+    def __init__(self, name: str, desc: str, analyses: List[PositionAnalysis]):
+        if not analyses:
+            raise ValueError("Analyses must be provided")
+        self.name = str
+        self.desc = desc
+        self.analyses = analyses
+        self.mask = reduce(lambda a, b: a | b.mask, analyses, 0)
+
+
+check = PositionAnalysis("Check", "Side with the move is in check")
+checkmate = PositionAnalysis("Checkmate", "Side with the move is in checkmate", False)
+stalemate = PositionAnalysis("Stalemate", "Side with the move can make no legal moves", False)
+insufficient_material = PositionAnalysis("InsufficientMaterial", "Neither side has enough material to mate the other")
+kings_touching = PositionAnalysis("KingsTouching", "Kings are not separated by at least 1 square")
+incorrect_king_count = PositionAnalysis("IncorrectKingCount", "Each side must have exactly 1 king")
+incorrect_pawn_count = PositionAnalysis("IncorrectPawnCount", "A side can have at most 8 pawns")
+too_many_checks = PositionAnalysis("TooManyChecks", "Either king is attacked 3 or more times")
+enemy_in_check = PositionAnalysis("EnemyInCheck", "Enemy side is in check already, meaning they did not get out of "
+                                                  "check on their turn")
+pawn_on_end_ranks = PositionAnalysis("PawnOnEndRanks", "A pawn is on the 1st or 8th rank")
+illogical_castling_rights = PositionAnalysis("IllogicalCastlingRights", "Any position where the ally has castling "
+                                                                        "rights that should not be possible")
+illogical_ep_square = PositionAnalysis("IllogicalEpSquare", "En passant square is not on the 3rd or 6th rank, there is "
+                                                            "a piece in the way, or there is no corresponding pawn")
+
+game_over_group = PositionAnalysisGroup("GameOverGroup", "Game has come to an end", [
+    checkmate,
+    stalemate,
+    insufficient_material
+])
+
+illegal_setup = PositionAnalysisGroup("IllegalSetup", "Position is not possible through traditional rules", [
+    kings_touching,
+    incorrect_pawn_count,
+    incorrect_king_count,
+    too_many_checks,
+    pawn_on_end_ranks,
+    enemy_in_check,
+    illogical_castling_rights,
+])
 
 """
 check 
 checkmate nonpseudo 
 stalemate nonpseudo
+insufficient material
+
 
 illegal
     kingstouching
