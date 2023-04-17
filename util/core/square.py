@@ -11,7 +11,7 @@ WHITE = "white"
 
 SideNames = Literal["white", "black", "either"]
 
-SquareConstructorType = Union[int, str, Tuple[int, int], Self]
+SquareConstructorType = Union[int, str, Tuple[int, int], "Square"]
 
 
 @total_ordering
@@ -144,7 +144,7 @@ class Square:
 
 SQ = Square
 
-SquareSetConstructorType = Union[Self, int, List, str, Square]
+SquareSetConstructorType = Union[int, List, str, Square, "SquareSet"]
 
 
 class SquareSet:
@@ -247,7 +247,7 @@ class SquareSet:
             else:
                 try:
                     acc |= Square(item).mask
-                except:
+                except ValueError:
                     raise ValueError(f"item {i}: \"{item}\" can not be part of a SquareSet")
         self._value = acc
 
