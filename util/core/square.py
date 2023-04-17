@@ -1,9 +1,6 @@
-import functools
 import re
-from types import SimpleNamespace
-from typing import *
-from addict import Dict
 from functools import total_ordering
+from typing import *
 
 ALGEBRAIC_REGEX = re.compile("^[a-h][1-8]$", re.I)
 BLACK = "black"
@@ -145,7 +142,7 @@ class Square:
 
 SQ = Square
 
-SquareSetConstructorType = Union[int, List, str, Square, "SquareSet"]
+SquareSetConstructorType = Union[int, Iterable, str, Square, "SquareSet"]
 
 
 class SquareSet:
@@ -159,7 +156,7 @@ class SquareSet:
         elif tipe == int:
             self._value = initial
         elif tipe in [tuple, list, set]:
-            self._init_from_list(initial)
+            self._init_from_iter(initial)
         elif tipe == str:
             self._init_from_str(initial)
         elif tipe == Square:
@@ -235,7 +232,7 @@ class SquareSet:
     def _comma_sep_alg(self):
         return ",".join([sq.name for sq in self.squares()])
 
-    def _init_from_list(self, initial: list) -> None:
+    def _init_from_iter(self, initial: Iterable) -> None:
         acc = 0
         for i, item in enumerate(initial):
             tipe = type(item)
@@ -254,7 +251,7 @@ class SquareSet:
 
     def _init_from_str(self, initial: str):
         trimmed = [sq.strip() for sq in initial.split(",")]
-        self._init_from_list(trimmed)
+        self._init_from_iter(trimmed)
 
     def __add__(self, other: any) -> Self:
         return self.union(SS(other))
@@ -335,6 +332,10 @@ class SquareSet:
     def __sub__(self, other):
         return SS(self.value & ~SS(other).value)
 
+
+SS = SquareSet
+
+
 def ranks(*args) -> Tuple[Square]:
     res = []
     for i in args:
@@ -342,17 +343,19 @@ def ranks(*args) -> Tuple[Square]:
             res.append(SQ(j))
     return tuple(res)
 
+
 def files(s: str) -> Tuple[Square]:
     res = []
     for c in s:
         idx = "abcdefgh".index(c)
         for j in range(idx, 64, 8):
             res.append(SQ(j))
+    return tuple(res)
 
 
-class sqs:
+class sq:
     class starting:
-        all = ranks(range(1,9))
+        all = ranks(range(1, 9))
         white = ranks(1, 2)
         black = ranks(7, 8)
         pawns = ranks(2, 7)
@@ -384,91 +387,129 @@ class sqs:
         g = files("g")
         h = files("h")
 
+    class white:
+        class castling:
+            short_blockable = tuple(SQ(i) for i in ["f1", "g1"])
+            short_checkable = tuple(SQ(i) for i in ["e1", "f1", "g1"])
+            short_king = SQ("g1")
+            short_rook = SQ("f1")
+            long_blockable = tuple(SQ(i) for i in ["b1", "c1", "d1"])
+            long_checkable = tuple(SQ(i) for i in ["c1", "d1", "e1"])
+            long_king = SQ("c1")
+            long_rook = SQ("d1")
+
+        class starting:
+            all = ranks(1, 2)
+            pawns = ranks(2)
+            knights = tuple((SQ(s) for s in ["b1", "g1"]))
+            bishops = tuple((SQ(s) for s in ["c1", "f1"]))
+            rooks = tuple((SQ(s) for s in ["a1", "h1"]))
+            queens = tuple((SQ(s) for s in ["d1"]))
+            king = SQ("e1")
+            promotion = ranks(8)
+
+    class black:
+        class castling:
+            short_blockable = tuple(SQ(i) for i in ["f8", "g8"])
+            short_checkable = tuple(SQ(i) for i in ["e8", "f8", "g8"])
+            short_king = SQ("g8")
+            short_rook = SQ("f8")
+            long_blockable = tuple(SQ(i) for i in ["b8", "c8", "d8"])
+            long_checkable = tuple(SQ(i) for i in ["c8", "d8", "e8"])
+            long_king = SQ("c8")
+            long_rook = SQ("d8")
+
+        class starting:
+            all = ranks(7, 8)
+            pawns = ranks(7)
+            knights = tuple((SQ(s) for s in ["b8", "g8"]))
+            bishops = tuple((SQ(s) for s in ["c8", "f8"]))
+            rooks = tuple((SQ(s) for s in ["a8", "h8"]))
+            queens = tuple((SQ(s) for s in ["d8"]))
+            king = SQ("e8")
+            promotion = ranks(1)
+
     all = tuple(SQ(i) for i in range(64))
     none = tuple()
     empty = tuple()
 
 
-SS = SquareSet
+class ss:
+    class starting:
+        all = SS(sq.starting.all)
+        white = SS(sq.starting.white)
+        black = SS(sq.starting.black)
+        pawns = SS(sq.starting.pawns)
+        knights = SS(sq.starting.knights)
+        bishops = SS(sq.starting.bishops)
+        rooks = SS(sq.starting.rooks)
+        queens = SS(sq.starting.queens)
+        kings = SS(sq.starting.kings)
 
-s = Dict()
+    class ranks:
+        all = SS(sq.ranks.all)
+        r1 = SS(sq.ranks.r1)
+        r2 = SS(sq.ranks.r2)
+        r3 = SS(sq.ranks.r3)
+        r4 = SS(sq.ranks.r4)
+        r5 = SS(sq.ranks.r5)
+        r6 = SS(sq.ranks.r6)
+        r7 = SS(sq.ranks.r7)
+        r8 = SS(sq.ranks.r8)
 
-s.all = tuple([Square(i) for i in range(64)])
-s.none = tuple([])
-s.empty = tuple([])
+    class files:
+        all = SS(sq.files.all)
+        a = SS(sq.files.a)
+        b = SS(sq.files.b)
+        c = SS(sq.files.c)
+        d = SS(sq.files.d)
+        e = SS(sq.files.e)
+        f = SS(sq.files.f)
+        g = SS(sq.files.g)
+        h = SS(sq.files.h)
 
-s.starting.all = tuple([sq for sq in s.all if sq.rank in [1, 2, 7, 8]])
-s.starting.pawns = tuple([sq for sq in s.all if sq.rank in [2, 7]])
-s.starting.knights = tuple([sq for sq in s.all if sq.name in "b1,g1,b8,g8"])
-s.starting.bishops = tuple([sq for sq in s.all if sq.name in "c1,f1,c8,f8"])
-s.starting.rooks = tuple([sq for sq in s.all if sq.name in "a1,h1,a8,h8"])
-s.starting.queens = tuple([SQ("d1"), SQ("d8")])
-s.starting.kings = tuple([SQ("e1"), SQ("e8")])
+    class white:
+        class castling:
+            short_blockable = SS(sq.white.castling.short_blockable)
+            short_checkable = SS(sq.white.castling.short_checkable)
+            short_king = SS(sq.white.castling.short_king)
+            short_rook = SS(sq.white.castling.short_rook)
+            long_blockable = SS(sq.white.castling.long_blockable)
+            long_checkable = SS(sq.white.castling.long_checkable)
+            long_king = SS(sq.white.castling.long_king)
+            long_rook = SS(sq.white.castling.long_rook)
 
-s.rank.r1 = tuple([sq for sq in s.all if sq.rank == 1])
-s.rank.r2 = tuple([sq for sq in s.all if sq.rank == 2])
-s.rank.r3 = tuple([sq for sq in s.all if sq.rank == 3])
-s.rank.r4 = tuple([sq for sq in s.all if sq.rank == 4])
-s.rank.r5 = tuple([sq for sq in s.all if sq.rank == 5])
-s.rank.r6 = tuple([sq for sq in s.all if sq.rank == 6])
-s.rank.r7 = tuple([sq for sq in s.all if sq.rank == 7])
-s.rank.r8 = tuple([sq for sq in s.all if sq.rank == 8])
+        class starting:
+            all = SS(sq.white.starting.all)
+            pawns = SS(sq.white.starting.pawns)
+            knights = SS(sq.white.starting.knights)
+            bishops = SS(sq.white.starting.bishops)
+            rooks = SS(sq.white.starting.rooks)
+            queens = SS(sq.white.starting.queens)
+            king = SS(sq.white.starting.king)
+            promotion = SS(sq.white.starting.promotion)
 
-s.file.a = tuple([sq for sq in s.all if sq.file == "a"])
-s.file.b = tuple([sq for sq in s.all if sq.file == "b"])
-s.file.c = tuple([sq for sq in s.all if sq.file == "c"])
-s.file.d = tuple([sq for sq in s.all if sq.file == "d"])
-s.file.e = tuple([sq for sq in s.all if sq.file == "e"])
-s.file.f = tuple([sq for sq in s.all if sq.file == "f"])
-s.file.g = tuple([sq for sq in s.all if sq.file == "g"])
-s.file.h = tuple([sq for sq in s.all if sq.file == "h"])
+    class black:
+        class castling:
+            short_blockable = SS(sq.black.castling.short_blockable)
+            short_checkable = SS(sq.black.castling.short_checkable)
+            short_king = SS(sq.black.castling.short_king)
+            short_rook = SS(sq.black.castling.short_rook)
+            long_blockable = SS(sq.black.castling.long_blockable)
+            long_checkable = SS(sq.black.castling.long_checkable)
+            long_king = SS(sq.black.castling.long_king)
+            long_rook = SS(sq.black.castling.long_rook)
 
-s.white.starting.all = tuple([sq for sq in s.all if sq.rank in [1, 2]])
-s.white.starting.king = SQ("e1")
-s.white.starting.queen = SQ("d1")
-s.white.starting.bishops = tuple([SQ("c1"), SQ("f1")])
-s.white.starting.knights = tuple([SQ("b1"), SQ("g1")])
-s.white.starting.rooks = tuple([SQ("a1"), SQ("h1")])
-s.white.starting.pawns = tuple([sq for sq in s.all if sq.rank == 2])
-s.white.promotion = tuple([sq for sq in s.all if sq.rank == 8])
-s.white.castling.short.blockable = tuple([sq for sq in s.all if sq.name in "f1,g1"])
-s.white.castling.short.checkable = tuple([sq for sq in s.all if sq.name in "f1,g1"])
-s.white.castling.short.king = tuple([SQ("g1")])
-s.white.castling.short.rook = tuple([SQ("f1")])
-s.white.castling.long.blockable = tuple([sq for sq in s.all if sq.name in "d1, c1, b1"])
-s.white.castling.long.checkable = tuple([sq for sq in s.all if sq.name in "d1, c1"])
-s.white.castling.long.king = tuple([SQ("c1")])
-s.white.castling.long.rook = tuple([SQ("d1")])
-s.white.squares = tuple([sq for sq in s.all if sq.white])
+        class starting:
+            all = SS(sq.black.starting.all)
+            pawns = SS(sq.black.starting.pawns)
+            knights = SS(sq.black.starting.knights)
+            bishops = SS(sq.black.starting.bishops)
+            rooks = SS(sq.black.starting.rooks)
+            queens = SS(sq.black.starting.queens)
+            king = SS(sq.black.starting.king)
+            promotion = SS(sq.black.starting.promotion)
 
-s.black.starting.all = tuple([sq for sq in s.all if sq.rank in [7, 8]])
-s.black.starting.king = SQ("e8")
-s.black.starting.queen = SQ("d8")
-s.black.starting.bishops = tuple([SQ("c8"), SQ("f8")])
-s.black.starting.knights = tuple([SQ("b8"), SQ("g8")])
-s.black.starting.rooks = tuple([SQ("a8"), SQ("h8")])
-s.black.starting.pawns = tuple([sq for sq in s.all if sq.rank == 2])
-s.black.promotion = tuple([sq for sq in s.all if sq.rank == 8])
-s.black.castling.short.blockable = tuple([sq for sq in s.all if sq.name in "f8,g8"])
-s.black.castling.short.checkable = tuple([sq for sq in s.all if sq.name in "f8,g8"])
-s.black.castling.short.king = tuple([SQ("g8")])
-s.black.castling.short.rook = tuple([SQ("f8")])
-s.black.castling.long.blockable = tuple([sq for sq in s.all if sq.name in "d8, c8, b8"])
-s.black.castling.long.checkable = tuple([sq for sq in s.all if sq.name in "d8, c8"])
-s.black.castling.long.king = tuple([SQ("c8")])
-s.black.castling.long.rook = tuple([SQ("d8")])
-s.black.squares = tuple([sq for sq in s.all if sq.black])
-
-ss = Dict(s)
-
-
-def _make_squaresets(root: Dict):
-    for key, val in root.items():
-        if type(val) in [SQ, tuple]:
-            root[key] = SS(val)
-        if type(val) == Dict:
-            _make_squaresets(val)
-
-
-# turn squares or list[square] from s into SquareSets
-_make_squaresets(ss)
+    all = SS(sq.all)
+    none = SS(sq.none)
+    empty = SS(sq.empty)
