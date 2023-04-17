@@ -45,7 +45,7 @@ class Position:
     def empty(cls) -> "Position":
         return Position(
             is_white=True,
-            white_pawns=ss.rank.r2,
+            white_pawns=ss.ranks.r2,
             white_knights=ss.starting.knights & ss.starting.white,
             white_bishops=ss.starting.bishops & ss.starting.white,
             white_rooks=ss.starting.rooks & ss.starting.white,
