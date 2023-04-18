@@ -1,11 +1,11 @@
 import pytest
-import dataclasses as dc
+from dataclasses import dataclass
 import chess as c
 from core.square import *
 
 
 def square_should_be_constructible():
-    @dc.dataclass()
+    @dataclass()
     class Case:
         name: str
         value: any
@@ -26,14 +26,14 @@ def square_should_be_constructible():
     ]
     for name, value, want in cases:
         try:
-            sq = SQ(value)
+            got = SQ(value)
         except:
             pytest.fail(f"Square construction failed for case \"{name}\"")
-        assert sq.idx == want, name
+        assert got.idx == want, name
 
 
 def square_should_validate_parameters_to_constructor():
-    @dc.dataclass
+    @dataclass
     class Case:
         name: str
         value: any
@@ -56,7 +56,7 @@ def square_should_validate_parameters_to_constructor():
 
 
 def square_should_expose_accurate_convenience_properties():
-    @dc.dataclass
+    @dataclass
     class Props:
         name: str
         index: int
@@ -69,7 +69,7 @@ def square_should_expose_accurate_convenience_properties():
         mask: int
         smask: str
 
-    @dc.dataclass
+    @dataclass
     class Case:
         name: str
         sut: Square
@@ -104,7 +104,7 @@ def square_should_expose_accurate_convenience_properties():
 
 
 def square_should_recognize_promotion_squares():
-    @dc.dataclass
+    @dataclass
     class Case:
         name: str
         sut: Square
@@ -129,7 +129,7 @@ def square_should_recognize_promotion_squares():
 
 
 def square_should_have_equality_with_several_types():
-    @dc.dataclass
+    @dataclass
     class Case:
         name: str
         sut: Square
@@ -156,7 +156,7 @@ def square_should_have_equality_with_several_types():
 
 
 def squareset_should_be_constructible():
-    @dc.dataclass
+    @dataclass
     class Case:
         name: str
         value: any
@@ -171,7 +171,7 @@ def squareset_should_be_constructible():
         Case("a1", "a1", 1),
         Case("e4 e5", ["e4", "d5"], (c.BB_E4 | c.BB_D5)),
         Case("Comma separated list", "a1,e4", (c.BB_A1 | c.BB_E4)),
-        Case("mixed list a1 e4 g7", [s.all[0], "e4", c.BB_G7], (c.BB_A1 | c.BB_E4 | c.BB_G7)),
+        Case("mixed list a1 e4 g7", [sq.all[0], "e4", c.BB_G7], (c.BB_A1 | c.BB_E4 | c.BB_G7)),
     ]
 
     for name, value, want in cases:
@@ -183,7 +183,7 @@ def squareset_should_be_constructible():
 
 
 def squareset_should_offer_basic_set_operations():
-    @dc.dataclass
+    @dataclass
     class Case:
         name: str
         sut: Callable[[], SS]
@@ -217,7 +217,7 @@ def squareset_should_offer_basic_set_operations():
 
 
 def squareset_should_offer_subset_methods():
-    @dc.dataclass
+    @dataclass
     class Case:
         name: str
         sut: Callable[[], bool]
@@ -233,15 +233,15 @@ def squareset_should_offer_subset_methods():
         Case("all black starting is superset of black rooks",
              lambda: ss.black.starting.all.is_superset_of(ss.black.starting.rooks)),
         Case("starting pawns is proper superset of rank 7",
-             lambda: ss.starting.pawns.is_proper_superset_of(ss.rank.r7)),
+             lambda: ss.starting.pawns.is_proper_superset_of(ss.ranks.r7)),
         Case("white starting has subset white starting",
              lambda: ss.white.starting.all.has_subset(ss.white.starting.all)),
         Case("white starting does not have proper subset white starting",
              lambda: not ss.white.starting.all.has_proper_subset(ss.white.starting.all)),
         Case("starting white has superset starting all", lambda: ss.white.starting.all.has_superset(ss.starting.all)),
-        Case("starting black has proper subset rank 7", lambda: ss.black.starting.all.has_proper_subset(ss.rank.r7)),
-        Case("a1,a2 has superset a file", lambda: SS("a1,a2").has_superset(ss.file.a)),
-        Case("a1,a2 has proper superset a file", lambda: SS("a1,a2").has_proper_superset(ss.file.a))
+        Case("starting black has proper subset rank 7", lambda: ss.black.starting.all.has_proper_subset(ss.ranks.r7)),
+        Case("a1,a2 has superset a file", lambda: SS("a1,a2").has_superset(ss.files.a)),
+        Case("a1,a2 has proper superset a file", lambda: SS("a1,a2").has_proper_superset(ss.files.a))
     ]
 
     for name, sut in cases:
@@ -249,7 +249,7 @@ def squareset_should_offer_subset_methods():
 
 
 def squareset_should_have_intuitive_operators():
-    @dc.dataclass
+    @dataclass
     class Case:
         name: str
         sut: Callable[[], any]
@@ -260,7 +260,7 @@ def squareset_should_have_intuitive_operators():
 
     cases = [
         Case("+ performs union", lambda: ss.white.starting.all + ss.black.starting.all, ss.starting.all),
-        Case("& performs intersection", lambda: ss.rank.r1 & ss.file.a, SS("a1")),
+        Case("& performs intersection", lambda: ss.ranks.r1 & ss.files.a, SS("a1")),
         Case("- performs difference", lambda: ss.starting.all - ss.white.starting.all, ss.black.starting.all),
         Case("in performs subset check 1", lambda: ss.white.starting.all in ss.white.starting.all, True),
         Case("in performs subset check 2", lambda: ss.white.starting.all in ss.starting.all, True),
@@ -281,7 +281,7 @@ def squareset_should_have_intuitive_operators():
         Case("- performs inverse", lambda: -ss.white.squares, ss.black.squares),
         Case("!= performs equality check", lambda: ss.white.squares != ss.black.squares, True),
         Case("[] performs membership check for squares", lambda: ss.white.squares[SQ("h1")], True),
-        Case("len performs bit count", lambda: len(ss.file.e), 8)
+        Case("len performs bit count", lambda: len(ss.files.e), 8)
     ]
 
     for name, sut, want in cases:
@@ -289,28 +289,28 @@ def squareset_should_have_intuitive_operators():
 
 
 def squareset_should_be_iterable():
-    @dc.dataclass
+    @dataclass
     class Case:
         name: str
         sut: SquareSet
-        want: List[Square]
+        want: Tuple[Square]
 
         def __iter__(self):
             return iter([self.name, self.sut, self.want])
 
     cases = [
-        Case("empty squareset", ss.empty, []),
-        Case("single square", SquareSet("a1"), [SQ("a1")]),
-        Case("rank 1", ss.rank.r1, [s.all[i] for i in range(8)]),
-        Case("all squares", ss.all, list(s.all)),
+        Case("empty squareset", ss.empty, sq.empty),
+        Case("single square", SquareSet("a1"), (SQ("a1"),)),
+        Case("rank 1", ss.ranks.r1, sq.ranks.r1),
+        Case("all squares", ss.all, sq.all),
     ]
 
     for name, sut, want in cases:
-        assert list(sut) == want, name
+        assert tuple(sut) == want, name
 
 
 def squareset_should_have_a_usable_str_result():
-    @dc.dataclass
+    @dataclass
     class Case:
         name: str
         sut: SquareSet
@@ -322,7 +322,7 @@ def squareset_should_have_a_usable_str_result():
     cases = [
         Case("empty", ss.empty, "SS()"),
         Case("a1", SS("a1"), "SS(a1)"),
-        Case("rank 2", ss.rank.r2, "SS(a2,b2,c2,d2,e2,f2,g2,h2)")
+        Case("rank 2", ss.ranks.r2, "SS(a2,b2,c2,d2,e2,f2,g2,h2)")
     ]
 
     for name, sut, want in cases:
@@ -330,7 +330,7 @@ def squareset_should_have_a_usable_str_result():
 
 
 def squareset_should_have_format_strings():
-    @dc.dataclass
+    @dataclass
     class Case:
         name: str
         sut: SquareSet
@@ -341,8 +341,8 @@ def squareset_should_have_format_strings():
             return iter([self.name, self.sut, self.format, self.want])
 
     cases = [
-        Case("alg produces comma separated list", ss.rank.r1, "alg", "a1,b1,c1,d1,e1,f1,g1,h1"),
-        Case("b produces binary rep", ss.rank.r1, "b", ("0" * 56) + ("1" * 8)),
+        Case("alg produces comma separated list", ss.ranks.r1, "alg", "a1,b1,c1,d1,e1,f1,g1,h1"),
+        Case("b produces binary rep", ss.ranks.r1, "b", ("0" * 56) + ("1" * 8)),
     ]
 
     for name, sut, frm, want in cases:

@@ -45,13 +45,20 @@ class Position:
     def empty(cls) -> "Position":
         return Position(
             is_white=True,
-            white_pawns=ss.ranks.r2,
-            white_knights=ss.starting.knights & ss.starting.white,
-            white_bishops=ss.starting.bishops & ss.starting.white,
-            white_rooks=ss.starting.rooks & ss.starting.white,
-            white_queens=ss.starting.queens & ss.starting.white,
-            white_king=sq.e1,
+            white_pawns=ss.white.starting.pawns,
+            white_knights=ss.white.starting.knights,
+            white_bishops=ss.white.starting.bishops,
+            white_rooks=ss.white.starting.rooks,
+            white_queens=ss.white.starting.queens,
+            white_king=sq.white.starting.king,
+            black_pawns=ss.black.starting.pawns,
+            black_knights=ss.black.starting.knights,
+            black_bishops=ss.black.starting.bishops,
+            black_rooks=ss.black.starting.rooks,
+            black_queens=ss.black.starting.queens,
+            black_king=sq.black.starting.king,
             ep_square=None,
             castling=(True, True, True, True),
-
+            half_move_clock=0,
+            full_move_number=1
         )

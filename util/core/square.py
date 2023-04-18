@@ -355,7 +355,7 @@ def files(s: str) -> Tuple[Square]:
 
 class sq:
     class starting:
-        all = ranks(range(1, 9))
+        all = ranks(1,2,7,8)
         white = ranks(1, 2)
         black = ranks(7, 8)
         pawns = ranks(2, 7)
@@ -366,7 +366,6 @@ class sq:
         kings = tuple((SQ(s) for s in ["e1", "e8"]))
 
     class ranks:
-        all = tuple(ranks(i) for i in range(1, 9))
         r1 = ranks(1)
         r2 = ranks(2)
         r3 = ranks(3)
@@ -377,7 +376,6 @@ class sq:
         r8 = ranks(8)
 
     class files:
-        all = tuple(files(i) for i in "abcdefgh")
         a = files("a")
         b = files("b")
         c = files("c")
@@ -388,6 +386,7 @@ class sq:
         h = files("h")
 
     class white:
+        squares = tuple(SQ(i) for i in range(1, 64, 2))
         class castling:
             short_blockable = tuple(SQ(i) for i in ["f1", "g1"])
             short_checkable = tuple(SQ(i) for i in ["e1", "f1", "g1"])
@@ -409,6 +408,7 @@ class sq:
             promotion = ranks(8)
 
     class black:
+        squares = tuple(SQ(i) for i in range(0, 64, 2))
         class castling:
             short_blockable = tuple(SQ(i) for i in ["f8", "g8"])
             short_checkable = tuple(SQ(i) for i in ["e8", "f8", "g8"])
@@ -511,7 +511,6 @@ class ss:
         kings = SS(sq.starting.kings)
 
     class ranks:
-        all = SS(sq.ranks.all)
         r1 = SS(sq.ranks.r1)
         r2 = SS(sq.ranks.r2)
         r3 = SS(sq.ranks.r3)
@@ -522,7 +521,6 @@ class ss:
         r8 = SS(sq.ranks.r8)
 
     class files:
-        all = SS(sq.files.all)
         a = SS(sq.files.a)
         b = SS(sq.files.b)
         c = SS(sq.files.c)
@@ -533,6 +531,7 @@ class ss:
         h = SS(sq.files.h)
 
     class white:
+        squares = SS(sq.white.squares)
         class castling:
             short_blockable = SS(sq.white.castling.short_blockable)
             short_checkable = SS(sq.white.castling.short_checkable)
@@ -554,6 +553,7 @@ class ss:
             promotion = SS(sq.white.starting.promotion)
 
     class black:
+        squares = SS(sq.black.squares)
         class castling:
             short_blockable = SS(sq.black.castling.short_blockable)
             short_checkable = SS(sq.black.castling.short_checkable)
