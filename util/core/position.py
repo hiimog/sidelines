@@ -1,6 +1,13 @@
 from typing import *
 
+from core.move import Move
+from core.piece import PieceType
 from core.square import *
+from re import compile as regex, IGNORECASE
+
+SAN_BASIC_REGEX = regex("^(?P<piece>[pnbrqk])?(?P<clarifier>[a-h1-8]{1,2})?(?P<cap>x)?(?P<dst>)?(?P<prom>=[nbrq])?[+#]?$", IGNORECASE)
+
+
 
 
 class Position:
@@ -41,8 +48,24 @@ class Position:
         self.full_move_number = full_move_number
         self.half_move_number = full_move_number * 2 + int(is_white)
 
+    def split_san(self, san: str) -> Tuple[Square, Square, PieceType]:
+        match =SAN_BASIC_REGEX.match(san)
+        if not match:
+            raise ValueError("san not in allowed format")
+        piece = match.group("piece")
+        clarifier = match.group("clarifier")
+        dst = match.group("dst")
+        cap = match.group("cap")
+        prom = match.group("prom")
+        # todo: come back to this
+
+
+    def apply_san(self, san: str) -> Move:
+        frm, to, prom = self.split_san(san)
+
+
     @classmethod
-    def empty(cls) -> "Position":
+    def starting(cls) -> "Position":
         return Position(
             is_white=True,
             white_pawns=ss.white.starting.pawns,
@@ -62,3 +85,15 @@ class Position:
             half_move_clock=0,
             full_move_number=1
         )
+
+
+    class Builder:
+        def __init__(self):
+            self.position = Position.starting()
+
+
+        def moves(self, sans: Iterable[str]) -> Self:
+            for san in sans:
+                self.position = self.position.apply(san)
+            return self
+
