@@ -26,4 +26,3 @@ WHITE_BISHOP = Piece("white bishop", PAWN.white_letter, BISHOP)
 WHITE_ROOK = Piece("white rook", PAWN.white_letter, ROOK)
 WHITE_QUEEN = Piece("white queen", PAWN.white_letter, QUEEN)
 WHITE_KING = Piece("white king", PAWN.white_letter, KING)
-
