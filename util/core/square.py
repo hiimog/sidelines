@@ -323,6 +323,9 @@ class SquareSet:
     def __ne__(self, other: any):
         return self.value != SS(other).value
 
+    def __or__(self, other):
+        return SquareSet(self.value | other.value)
+
     def __repr__(self) -> str:
         return self.__str__()
 
@@ -355,7 +358,7 @@ def files(s: str) -> Tuple[Square]:
 
 class sq:
     class starting:
-        all = ranks(1,2,7,8)
+        all = ranks(1, 2, 7, 8)
         white = ranks(1, 2)
         black = ranks(7, 8)
         pawns = ranks(2, 7)
@@ -387,6 +390,7 @@ class sq:
 
     class white:
         squares = tuple(SQ(i) for i in range(1, 64, 2))
+
         class castling:
             short_blockable = tuple(SQ(i) for i in ["f1", "g1"])
             short_checkable = tuple(SQ(i) for i in ["e1", "f1", "g1"])
@@ -409,6 +413,7 @@ class sq:
 
     class black:
         squares = tuple(SQ(i) for i in range(0, 64, 2))
+
         class castling:
             short_blockable = tuple(SQ(i) for i in ["f8", "g8"])
             short_checkable = tuple(SQ(i) for i in ["e8", "f8", "g8"])
@@ -532,6 +537,7 @@ class ss:
 
     class white:
         squares = SS(sq.white.squares)
+
         class castling:
             short_blockable = SS(sq.white.castling.short_blockable)
             short_checkable = SS(sq.white.castling.short_checkable)
@@ -554,6 +560,7 @@ class ss:
 
     class black:
         squares = SS(sq.black.squares)
+
         class castling:
             short_blockable = SS(sq.black.castling.short_blockable)
             short_checkable = SS(sq.black.castling.short_checkable)

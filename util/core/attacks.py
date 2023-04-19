@@ -1,4 +1,17 @@
-from core.square import SS
+from dataclasses import dataclass
+from typing import *
+
+from core.magics import *
+from core.square import SS, SQ
+
+
+@dataclass
+class Magic:
+    attack_mask: SS
+    attacks: List[SS]
+    magic_num: int
+    shift: int
+    square_idx: int
 
 
 KNIGHT_ATTACKS = [
@@ -134,3 +147,47 @@ KING_ATTACKS = [
     SS(0xa0e0000000000000),
     SS(0x40c0000000000000),
 ]
+
+BISHOP_MAGICS = []
+for i in range(64):
+    lo = BISHOP_OFFSETS[i]
+    hi = BISHOP_OFFSETS[i + 1] if i < 63 else int("inf")
+    square_attacks = BISHOP_ATTACK_TABLE[lo:hi]
+    magic_num = BISHOP_MAGIC_NUMS[i]
+    shift = BISHOP_SHIFTS[i]
+    mask = BISHOP_MASKS[i]
+    BISHOP_MAGICS.append(Magic(mask, square_attacks, magic_num, shift, i))
+
+ROOK_MAGICS = []
+for i in range(64):
+    lo = ROOK_OFFSETS[i]
+    hi = ROOK_OFFSETS[i + 1] if i < 63 else int("inf")
+    square_attacks = ROOK_ATTACK_TABLE[lo:hi]
+    magic_num = ROOK_MAGIC_NUMS[i]
+    shift = ROOK_SHIFTS[i]
+    mask = ROOK_MASKS[i]
+    ROOK_MAGICS.append(Magic(mask, square_attacks, magic_num, shift, i))
+
+
+def knight_attacks(location: SQ) -> SS:
+    return KNIGHT_ATTACKS[location.idx]
+
+
+def king_attacks(location: SQ) -> SS:
+    return KING_ATTACKS[location.idx]
+
+
+def bishop_attacks(location: SQ, occupied: SS) -> SS:
+    magic = BISHOP_MAGICS[location.idx]
+    index = (magic.magic_num * (occupied.value & magic.attack_mask)) >> (64 - magic.shift)
+    return magic.attacks[index]
+
+
+def rook_attacks(location: SQ, occupied: SS) -> SS:
+    magic = ROOK_MAGICS[location.idx]
+    index = (magic.magic_num * (occupied.value & magic.attack_mask)) >> (64 - magic.shift)
+    return magic.attacks[index]
+
+
+def queen_attacks(location: SQ, occupied: SS) -> SS:
+    return bishop_attacks(location, occupied) | rook_attacks(location, occupied)
