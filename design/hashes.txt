@@ -1,0 +1,11 @@
+
+Algorithm       Hash                                                                   Path
+---------       ----                                                                   ----
+SHA256          7224FDED577CB0B14DCAD66E60BC5213F75CB7871830D6E627BB177222F716BC       C:\git\sidelines\design\all.ai
+SHA256          357FEB6C5F125654E8B05F63D538C7FF3BAEA7C00F490101FEE1D7B43715B9A8       C:\git\sidelines\design\whitebishop.ai
+SHA256          421A503C3CA1ECA146585EDFE0DBB55B06EEED11F350536037BA55790036C88E       C:\git\sidelines\design\whiteking.ai
+SHA256          AED6400A37F618BDB34D14BD935DCC4C97DA4B5A202F816AB83916DC7FF078CB       C:\git\sidelines\design\whiteknight.ai
+SHA256          0414D65A041C6623186D309D327CFDA70EDBD03C663CAF105EB4A4968511F677       C:\git\sidelines\design\whitepawn.ai
+SHA256          2585E2553E549085608F87D80B0CE34B13B8FF0F1CF5E46A75E4BD50A9D6236F       C:\git\sidelines\design\whitequeen.ai
+SHA256          1DCDE1AF62437F272450D8D66BF8555BD91FBCC87C8A134CFE6657BCBF7161A8       C:\git\sidelines\design\whiterook.ai
+
